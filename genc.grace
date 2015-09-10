@@ -1806,7 +1806,8 @@ method processImports(values') {
                     }
                 } catch { e : RuntimeError ->
                     util.setPosition(v.line, 1)
-                    errormessages.error("Dialect error.  Dialect '{nm}' failed to load: {e.message}.")atLine(v.line)
+                    errormessages.error("Dialect error.  \n" ++ 
+                        "Dialect '{nm}' {e.message}.")atLine(v.line)
                 } 
                 try {
                     if (dialectHasChecker) then { dobj.checker(values') }
@@ -2104,10 +2105,6 @@ method compile(vl, outfile, mn, rm, bt, buildinfo) {
         if (util.extensions.contains("LogCallGraph")) then {
             var lcgfile := util.extensions.get("LogCallGraph")
             out("  enable_callgraph(\"{lcgfile}\");")
-        }
-        out("  setCompilerModulePath(\"{io.realpath(sys.execPath)}\");")
-        if(buildinfo.modulepath != "") then {
-            out("  setModulePath(\"{buildinfo.modulepath}\");")
         }
         out("  gracelib_argv(argv);")
         out("  Object params[1];")
