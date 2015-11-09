@@ -146,14 +146,10 @@ function string_curriedAt(idx) {
 }
 
 function string_hash(argcv) {
+    // The constant -1045270790 is a hash of the word string.  Each class should
+    // have its own constant.
     if (typeof this._hash === 'undefined') {
-        var hc = 0;
-        for (var i=0; i<this._value.length; i++) {
-            hc *= 23;
-            hc += this._value.charCodeAt(i);
-            hc = hc & hc;
-        }
-        this._hash = new GraceNum(Math.abs(hc));
+        this._hash = new GraceNum(pharoHashMultiply(this._value, -1045270790));
     }
     return this._hash;
 }
@@ -506,6 +502,65 @@ GraceString.prototype = {
 
 var GraceEmptyString = new GraceString("");
 
+function robertJenkins32bit5shiftHash(n) {
+    var answer = n & 0xFFFFFFFF;
+    answer = 0x479AB41D + answer + (answer << 8);
+    answer = answer & 0xFFFFFFFF;
+    answer = (0xE4AA10CE ^ answer) ^ (answer >> 5);
+    answer = 0x09942F0A6 + answer - (answer << 14);
+    answer = (0x5AEDD67D ^ answer) ^ (answer >> 3);
+    answer = 0x17BEA992 + answer + (answer << 7);
+    return (answer & 0xFFFFFFFF);
+}
+
+//function robertJenkins32bit6shiftHash(n) {
+//    var answer = n;
+//    answer = 0x7ED55D16 + answer + (answer << 12);
+//    answer = (0xC761C23C ^ answer) ^ (answer >> 19);
+//    answer = 0x165667B1 + answer + (answer << 5);
+//    answer = (0xD3A2646C + answer) ^ (answer << 9);
+//    answer = 0xFD7046C5 + answer + (answer << 3);
+//    answer = (0xB55A4F09 ^ answer) ^ (answer >> 16);
+//    return answer;
+//}
+
+function robertJenkins32bit6shiftHash(n) {
+    var answer = n;
+    answer = 0x7ED55D16 ^ answer ^ (answer << 12);
+    answer = (0xC761C23C ^ answer) ^ (answer >> 19);
+    answer = 0x165667B1 ^ answer ^ (answer << 5);
+    answer = (0xD3A2646C ^ answer) ^ (answer << 9);
+    answer = 0xFD7046C5 ^ answer ^ (answer << 3);
+    answer = (0xB55A4F09 ^ answer) ^ (answer >> 16);
+    return answer;
+}
+
+function pharoHashMultiply(str, initial) {
+    var sz = str.length;
+    var answer = initial & 0xFFFFFFFF;
+	for (var pos = 0; pos < sz ; pos++) {
+		answer = answer + str.charCodeAt(pos);
+		var low = answer & 16383.
+		answer = (0x260D * low + ((0x260D * (answer >> 14) + (0x0065 * low) & 16383) * 16384)) & 0x0FFFFFFFF;
+	}
+    return answer;
+}
+
+function compositeHash(str) {
+    var sz = str.length;
+    var halfSz = Math.floor(sz/2);
+    var answer = halfSz;
+    for (var i=0; i<halfSz; i++) {
+        var chunk = (str.charCodeAt(2*i+1) << 16) + str.charCodeAt(2*i);
+        answer = robertJenkins32bit6shiftHash(answer ^ chunk);
+    }
+    if (sz > halfSz) {
+        chunk = str.charCodeAt(str.length - 1)
+        answer = robertJenkins32bit6shiftHash(answer ^ chunk);
+    }
+    return answer;
+}
+
 function GraceNum(n) {
     this._value = n;
 }
@@ -638,12 +693,10 @@ GraceNum.prototype = {
             return callmethod(t, "not", [0]);
         },
         "hash": function num_hash (argcv) {
-            var raw = this._value * 13
-            return new GraceNum(Math.abs(raw & raw));  // & converts to 32-bit int
+            return new GraceNum(robertJenkins32bit6shiftHash(this._value));
         },
         "hashcode": function num_hashcode (argcv) {
-            var raw = this._value * 13
-            return new GraceNum(Math.abs(raw & raw));  // & converts to 32-bit int
+            return new GraceNum(robertJenkins32bit6shiftHash(this._value));
         },
         "inBase": function(argcv, other) {
             var mine = this._value;
@@ -774,7 +827,7 @@ GraceBoolean.prototype = {
             return new GraceFailedMatch(o);
         },
         "hash": function(argcv) {
-            return new GraceNum(this._value ? 3637 : 1741);
+            return new GraceNum(this._value ? 1979596172 : 2901400889);
         },
     },
     className: "boolean",

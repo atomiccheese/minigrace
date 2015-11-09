@@ -58,7 +58,7 @@ def stringMapTest = object {
         }
         method testMany {
             def n = if (engine == "c") then { 1000 } else { 10000 }
-            def keys = randomKeys(n);
+            def keys = randomStrings(n);
             def m = map.new
             def startTime = sys.elapsedTime
             keys.keysAndValuesDo { i, k ->
@@ -69,8 +69,9 @@ def stringMapTest = object {
                 assert (keys.at(v) == k) description "wrong value found for {k}"
             }
             def duration = sys.elapsedTime - startTime
-            print "In {engine}, elapsed time for {n} keys is {duration}s"
-            print "{n - m.size} duplicate keys"
+            print "stringMap with {n} keys in {engine}:"
+            print "    elapsed time to create and check is {duration}s"
+            print "    {n - m.size} collisions."
         }
         method testDo {
             var sum := 0
@@ -82,12 +83,12 @@ def stringMapTest = object {
             m123.keysDo { k -> keys.add(k) }
             assert (keys) shouldBe (set.with("one", "two", "three"))
         }
-        method randomKeys(n) {
-            def base = "A".ord
+        method randomStrings(n) {
+            def base = "a".ord
             def result = list.empty
             (1..n).do { ix ->
                 var s := ""
-                repeat 8 times {
+                repeat ((math.random * 10).truncated + 3) times {
                     def ch = (math.random * 26).truncated + base
                     s := s ++ unicode.create(ch)
                 }
@@ -95,9 +96,17 @@ def stringMapTest = object {
             }
             result
         }
+        method randomInts(n) {
+            def maxInt = 0x7FFFFFFF
+            def result = list.empty
+            repeat (n) times {
+                result.add((math.random * maxInt * 2).truncated - maxInt)
+            }
+            result
+        }
         method testStringHash {
-            def n = if (engine == "c") then { 500 } else { 10000 }
-            def strings = randomKeys(n)
+            def n = if (engine == "c") then { 500 } else { 5000 }
+            def strings = randomStrings(n)
             def hashes = dictionary.empty
             var total := 0
             var minh := infinity
@@ -105,7 +114,6 @@ def stringMapTest = object {
             def startTime = sys.elapsedTime
             var p := 8
             while { p < (2 * n) } do { p := p * 2 }
-            p := p + 13
             strings.do { s ->
                 def h = s.hash
                 if (h > maxh) then { maxh := h }
@@ -114,15 +122,77 @@ def stringMapTest = object {
                 hashes.at(h % p) put (allStrings.add(s))
             }
             def duration = sys.elapsedTime - startTime
+            var twoUp := 0
+            var threeUp := 0
             hashes.keysAndValuesDo { k, v -> 
                 if (v.size > 1) then {
-                    print "hash {k} shared by {v}"
+                    v.sort
+                    def w = list.with(v.first)
+                    v.do { each ->
+                        if (w.last ≠ each) then { w.addLast(each) }
+                    }
+                    if (w.size == 2) then {
+                        twoUp := twoUp + 1 
+                    } elseif { w.size == 3 } then {
+                        threeUp := threeUp + 1
+                    } elseif { w.size > 3 } then {
+                        print "hash {k} shared by {w}"
+                    }
                 }
                 total := total + v.size
             }
+            print "testing stringHash on {n} strings:"
+            print "    {twoUp} buckets contain 2 values."
+            print "    {threeUp} buckets contain 3 values."
             assert (total) shouldBe (n)
-            print "In {engine}, elapsed time for {n} hashes is {duration}s."
-            print "Hash range is {minh}..{maxh}. {hashes.size} distinct mod {p} values."
+            print "    In {engine}, elapsed time is {duration}s."
+            print "    Hash range is {minh}..{maxh}."
+            print "    {hashes.size} distinct mod {p} values."
+        }
+        method testIntHash {
+            def n = if (engine == "c") then { 500 } else { 5000 }
+            def ints = randomInts(n)
+            def hashes = dictionary.empty
+            var total := 0
+            var minh := infinity
+            var maxh := 0
+            def startTime = sys.elapsedTime
+            var p := 8
+            while { p < (2 * n) } do { p := p * 2 }
+            ints.do { s ->
+                def h = s.hash
+                if (h > maxh) then { maxh := h }
+                if (h < minh) then { minh := h }
+                def allInts = hashes.at(h % p) ifAbsent {list.empty}
+                hashes.at(h % p) put (allInts.add(s))
+            }
+            def duration = sys.elapsedTime - startTime
+            var twoUp := 0
+            var threeUp := 0
+            hashes.keysAndValuesDo { k, v -> 
+                if (v.size > 1) then {
+                    v.sort
+                    def w = list.with(v.first)
+                    v.do { each ->
+                        if (w.last ≠ each) then { w.addLast(each) }
+                    }
+                    if (w.size == 2) then {
+                        twoUp := twoUp + 1 
+                    } elseif { w.size == 3 } then {
+                        threeUp := threeUp + 1
+                    } elseif { w.size > 3 } then {
+                        print "hash {k} shared by {w}"
+                    }
+                }
+                total := total + v.size
+            }
+            print "testing intHash on {n} integers:"
+            print "    {twoUp} buckets contain 2 values."
+            print "    {threeUp} buckets contain 3 values."
+            assert (total) shouldBe (n)
+            print "    In {engine}, elapsed time for {n} hashes is {duration}s."
+            print "    Hash range is {minh}..{maxh}."
+            print "    {hashes.size} distinct mod {p} values."
         }
     }
 }
