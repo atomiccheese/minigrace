@@ -123,4 +123,5 @@ def stringMapTest = object {
 
 def mapTests = gU.testSuite.fromTestMethodsIn(stringMapTest)
 mapTests.name := "map tests"
-mapTests.runAndPrintResults
+print "staring tests"
+mapTests.debugAndPrintResults
