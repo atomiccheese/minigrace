@@ -145,11 +145,26 @@ function string_curriedAt(idx) {
     return new GraceString(s.charAt(idx-1));
 }
 
-function string_hash(argcv) {
-    // The constant -1045270790 is a hash of the word string.  Each class should
-    // have its own constant.
-    if (typeof this._hash === 'undefined') {
-        this._hash = new GraceNum(pharoHashMultiply(this._value, -1045270790));
+var stringInternTable = {};
+
+function internString(graceString) {
+    var s = graceString._value;
+    if (stringInternTable.hasOwnProperty(s)) {
+        graceString.interned = stringInternTable[s];
+        graceString._value = graceString.interned._value; // release the copy
+    } else {
+        stringInternTable[s] = graceString;
+        graceString.interned = graceString;
+    }
+}
+
+function string_hash(hashFun) {
+    if (this._hash === undefined) {
+        if (this.interned === undefined) internString(this);
+        if (this.interned._hash === undefined) {
+            this.interned._hash = new GraceNum(hashFun(this.interned._value));
+        }
+        this._hash = this.interned._hash;
     }
     return this._hash;
 }
@@ -365,12 +380,11 @@ GraceString.prototype = {
         "≤": string_lessThanOrEqual,
         "≥": string_greaterThanOrEqual,
         "==": function string_equal(argcv, other) {
-            if (this === other)
-                return GraceTrue;
-            if (this.prototype === other.prototype
-                && this._value === other._value)
-                return GraceTrue;
-            return GraceFalse;
+            if (this === other) return GraceTrue;
+            if (this.prototype !== other.prototype) return GraceFalse;
+            if (! this.interned) internString(this);
+            if (! other.interned) internString(other);
+            return (this.interned === other.interned) ? GraceTrue : GraceFalse;
         },
         "iterator": function string_iterator(argcv) {
             return new GraceStringIterator(this);
@@ -407,8 +421,11 @@ GraceString.prototype = {
         "ord": function string_ord (argcv) {
             return new GraceNum(this._value.charCodeAt(0));
         },
-        "hashcode": string_hash,
-        "hash": string_hash,
+        "hash": function (argv) {
+            return string_hash.call(this, string_simple_hash)
+        },
+        "hashJ5": robertJenkins32bit5shiftHash,
+        "hashJ6": robertJenkins32bit6shiftHashPlus,
         "indices": function string_indices(argcv) {
             var size = this._value.length;
             return callmethod(GraceRangeClass(), "from()to", [1, 1], new GraceNum(1), new GraceNum(size));
@@ -502,6 +519,17 @@ GraceString.prototype = {
 
 var GraceEmptyString = new GraceString("");
 
+function string_simple_hash(s) {
+    var hc = 0;
+    var len = s.length;
+    for (var i=0; i<len; i++) {
+        hc *= 23;
+        hc += s.charCodeAt(i);
+        hc = hc & hc;
+    }
+    return hc;
+}
+
 function robertJenkins32bit5shiftHash(n) {
     var answer = n & 0xFFFFFFFF;
     answer = 0x479AB41D + answer + (answer << 8);
@@ -513,18 +541,20 @@ function robertJenkins32bit5shiftHash(n) {
     return (answer & 0xFFFFFFFF);
 }
 
-//function robertJenkins32bit6shiftHash(n) {
-//    var answer = n;
-//    answer = 0x7ED55D16 + answer + (answer << 12);
-//    answer = (0xC761C23C ^ answer) ^ (answer >> 19);
-//    answer = 0x165667B1 + answer + (answer << 5);
-//    answer = (0xD3A2646C + answer) ^ (answer << 9);
-//    answer = 0xFD7046C5 + answer + (answer << 3);
-//    answer = (0xB55A4F09 ^ answer) ^ (answer >> 16);
-//    return answer;
-//}
+function robertJenkins32bit6shiftHashPlus(n) {
+    var answer = n;
+    answer = 0x7ED55D16 + answer + (answer << 12);
+    answer = (0xC761C23C ^ answer) ^ (answer >> 19);
+    answer = 0x165667B1 + answer + (answer << 5);
+    answer = (0xD3A2646C + answer) ^ (answer << 9);
+    answer = 0xFD7046C5 + answer + (answer << 3);
+    answer = (0xB55A4F09 ^ answer) ^ (answer >> 16);
+    return answer;
+}
 
-function robertJenkins32bit6shiftHash(n) {
+function robertJenkins32bit6shiftHashXOR(n) {
+    // I think that this may be as effective as the above cersion with Plus,
+    // but without the repeated conversion to and from floating point.
     var answer = n;
     answer = 0x7ED55D16 ^ answer ^ (answer << 12);
     answer = (0xC761C23C ^ answer) ^ (answer >> 19);
@@ -546,17 +576,17 @@ function pharoHashMultiply(str, initial) {
     return answer;
 }
 
-function compositeHash(str) {
+function compositeHash(str, baseHashFn) {
     var sz = str.length;
     var halfSz = Math.floor(sz/2);
     var answer = halfSz;
     for (var i=0; i<halfSz; i++) {
         var chunk = (str.charCodeAt(2*i+1) << 16) + str.charCodeAt(2*i);
-        answer = robertJenkins32bit6shiftHash(answer ^ chunk);
+        answer = baseHashFn(answer ^ chunk);
     }
     if (sz > halfSz) {
         chunk = str.charCodeAt(str.length - 1)
-        answer = robertJenkins32bit6shiftHash(answer ^ chunk);
+        answer = baseHashFn(answer ^ chunk);
     }
     return answer;
 }
@@ -693,11 +723,12 @@ GraceNum.prototype = {
             return callmethod(t, "not", [0]);
         },
         "hash": function num_hash (argcv) {
-            return new GraceNum(robertJenkins32bit6shiftHash(this._value));
+            var raw = this._value * 13
+            return new GraceNum(Math.abs(raw & raw));  // & converts to 32-bit int
         },
-        "hashcode": function num_hashcode (argcv) {
-            return new GraceNum(robertJenkins32bit6shiftHash(this._value));
-        },
+        "hashJ6": function num_hash (argcv) {
+            return new GraceNum(robertJenkins32bit6shiftHashPlus(this._value));
+        },			
         "inBase": function(argcv, other) {
             var mine = this._value;
             var base = other._value;
