@@ -381,7 +381,7 @@ GraceString.prototype = {
         "≥": string_greaterThanOrEqual,
         "==": function string_equal(argcv, other) {
             if (this === other) return GraceTrue;
-            if (this.prototype !== other.prototype) return GraceFalse;
+            if (this.__proto__ !== other.__proto__) return GraceFalse;
             if (! this.interned) internString(this);
             if (! other.interned) internString(other);
             return (this.interned === other.interned) ? GraceTrue : GraceFalse;
@@ -421,11 +421,20 @@ GraceString.prototype = {
         "ord": function string_ord (argcv) {
             return new GraceNum(this._value.charCodeAt(0));
         },
-        "hash": function (argv) {
+        "hash": function string_hash_simple (argv) {
             return string_hash.call(this, string_simple_hash)
         },
-        "hashJ5": robertJenkins32bit5shiftHash,
-        "hashJ6": robertJenkins32bit6shiftHashPlus,
+        "hashJ5": function string_hash_J5 (argv) {
+            // return string_hash.call(this, jenkins5StringHash);
+            return new GraceNum(jenkins5StringHash(this._value));
+        },
+        "hashJ6": function string_hash_J6 (argv) {
+            // return string_hash.call(this, jenkins6StringHash);
+            return new GraceNum(jenkins6StringHash(this._value));
+        },
+        "hashP": function string_hash_P (argv) {
+            return new GraceNum(pharoHashMultiply(this._value, 3465311273));
+        },
         "indices": function string_indices(argcv) {
             var size = this._value.length;
             return callmethod(GraceRangeClass(), "from()to", [1, 1], new GraceNum(1), new GraceNum(size));
@@ -552,9 +561,18 @@ function robertJenkins32bit6shiftHashPlus(n) {
     return answer;
 }
 
+function jenkins6StringHash(s) {
+    return compositeHash(s, robertJenkins32bit6shiftHashPlus)
+}
+
+function jenkins5StringHash(s) {
+    return compositeHash(s, robertJenkins32bit5shiftHash)
+}
+
 function robertJenkins32bit6shiftHashXOR(n) {
-    // I think that this may be as effective as the above cersion with Plus,
+    // I think that this may be as effective as the above version with Plus,
     // but without the repeated conversion to and from floating point.
+    // The lack of carry means that there may be less bit-scrambling.
     var answer = n;
     answer = 0x7ED55D16 ^ answer ^ (answer << 12);
     answer = (0xC761C23C ^ answer) ^ (answer >> 19);
@@ -724,14 +742,17 @@ GraceNum.prototype = {
         },
         "hash": function num_hash (argcv) {
             var raw = this._value * 13
-            return new GraceNum(Math.abs(raw & raw));  // & converts to 32-bit int
+            return new GraceNum(raw & raw);  // & converts to 32-bit int
         },
-        "hashJ6": function num_hash (argcv) {
+        "hashJ5": function num_hashJ5 (argcv) {
+            return new GraceNum(robertJenkins32bit6shiftHashPlus(this._value));
+        },
+        "hashJ6": function num_hashJ6 (argcv) {
             return new GraceNum(robertJenkins32bit6shiftHashPlus(this._value));
         },			
-        "inBase": function(argcv, other) {
+        "inBase": function(argcv, b) {
             var mine = this._value;
-            var base = other._value;
+            var base = b._value;
             var symbols = "0123456789abcdefghijklmnopqrstuvwxyz";
             var str = "";
             var before = "";
@@ -847,7 +868,7 @@ GraceBoolean.prototype = {
         "==": function(argcv, other) {
             if (this == other)
                 return GraceTrue;
-            if (this.prototype == other.prototype
+            if (this.__proto__ == other.__proto__
                     && this._value == other._value)
                 return GraceTrue;
             return GraceFalse;

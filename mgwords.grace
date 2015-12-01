@@ -29,7 +29,7 @@ def graceWords = list.with("'", "'A'", "'as'", "'case'", "'catch'", "'class'", "
     "associative", "asString", "asStringBody", "asStringMeth", "asStringWithParents", "asString",
     "assume", "AST", "ASTNode", "ASTVisitor", "at", "atLine", "atModuleEnd",
     "atModuleEnd", "atModuleStart", "atModuleStart", "atPosition", "atRange", "atStart", 
-    "attached", "attempt", "attribute", "attributes", "atttributes", "authors", "auto_count", 
+    "attached", "attempt", "attribute", "attributes", "authors", "auto_count",
     "available", "aVarName", "ax", "b", "ba", "back", "Backspace", "backtickIdent", 
     "badControl", "badSeparator", "bare", "base", "based", "basename", "baseNode", 
     "baseSet", "BaseType", "baseVisitor", "bash", "basicAsString", "BasicPattern", "bb", 
