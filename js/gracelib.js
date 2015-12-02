@@ -868,10 +868,7 @@ GraceBoolean.prototype = {
         "==": function(argcv, other) {
             if (this == other)
                 return GraceTrue;
-            if (this.__proto__ == other.__proto__
-                    && this._value == other._value)
-                return GraceTrue;
-            return GraceFalse;
+            return (this._value === Grace_isTrue(other)) ? GraceTrue : GraceFalse;
         },
         "match": function(argcv, o) {
             if (Grace_isTrue(callmethod(this, "==", [1], o)))
