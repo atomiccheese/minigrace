@@ -2,12 +2,89 @@ import "unicode" as unicode
 import "math" as math
 import "mgwords" as mgw
 
+def prime = object {
+    var sieve  //  sieve.at(i) represents the primeness of (2*i) + 1
+    var limit
+    var sieveSize
+    
+    method initialize(maxPrime) {
+        limit := maxPrime
+        sieveSize := ((limit-1) / 2).truncated
+        sieve := (1..sieveSize).map { each -> true }.asList
+        runSieve
+    }
+    method markNot(n) {
+        // mark the fact that n is not a prime
+        if ((n % 2) ≠ 0) then {
+            sieve.at((n-1)/2) put(false)
+        }
+    }
+    method next(n) {
+        def start = (n-1)/2
+        ((start+1)..sieveSize).do { candidate ->
+            if (sieve.at(candidate)) then { return (2*candidate) + 1 }
+        }
+        initialize(limit * 2)
+        next(n)
+    }
+    
+    method printSieve {
+        sieve.keysAndValuesDo { n, b -> 
+            if (b) then { prelude.print((2*n) + 1) } 
+        }
+    }
+    
+    method greaterThan(n) {
+        // answers the smallest prime greater than n
+        var ix := ((n / 2) + 0.5).truncated
+        while { (ix ≤ sieveSize).andAlso{ ! sieve.at(ix) }} do { ix := ix + 1 }
+        if (ix ≤ sieveSize) then {
+            (2*ix) + 1
+        } else {
+            largerPrimeGreaterThan(n)
+        }
+    }
+    
+    method largerPrimeGreaterThan(n) {
+        var candidate := n + 1
+        if ((candidate % 2) == 0) then { candidate := candidate + 1 }
+        while { notPrime(candidate) } do { candidate := candidate + 2 }
+        candidate
+    }
+    
+    method notPrime(n) {
+        var d := 3
+        while { (d * d) < n } do {
+            if ((n % d) == 0) then { return true }
+            d := next(d)
+        }
+        return false
+    }
+    
+    method runSieve {
+        var currentPrime := 3
+        var ix
+        do {
+            ix := currentPrime * 2
+            while {ix ≤ limit} do {
+                self.markNot(ix)
+                ix := ix + currentPrime
+            }
+            currentPrime := self.next(currentPrime)
+        } while { (currentPrime * currentPrime) ≤ limit }
+    }
+}
+
+prime.initialize(500)
+
 def words = mgw.graceWords.asSet
+def rs = randomStrings(1000).asSet
+def rn = randomNumbers(1000).asSet
 
-def rs = randomStrings(1000)
-
-printMetrics ".hash on 1..1000" forFun {x -> x} onData (1..1000)
+printMetrics ".hash on 1..1000" forFun {x -> x.hash} onData (1..1000)
+printMetrics ".hash on 1000 random numbers" forFun {x -> x.hash} onData (rn)
 printMetrics ".hashJ6 on 1..1000" forFun {x -> x.hashJ6} onData (1..1000)
+printMetrics ".hashJ6 on 1000 random numbers" forFun {x -> x.hashJ6} onData (rn)
 printMetrics ".hash on 1000 random strings" forFun {x -> x.hash} onData (rs)
 printMetrics ".hashJ5 on 1000 random strings" forFun {x -> x.hashJ5} onData (rs)
 printMetrics ".hashJ6 on 1000 random strings" forFun {x -> x.hashJ6} onData (rs)
@@ -97,6 +174,8 @@ class hashQuality(data, hashFn) {
             results.add( resultRecord(p'.rounded) )
         }
 //        print "established results for powers of 2 * sqrt(2)"
+        def primeVals = results.map { each -> prime.greaterThan(each.p) }.asSequence
+        primeVals.do { each -> results.add(resultRecord(each)) }
         results.sort
         results.do { each ->
             p' := each.p
@@ -136,6 +215,17 @@ class hashQuality(data, hashFn) {
         }
         results
     }
+}
+
+method randomNumbers(n) {
+    def result = list.empty
+    def twoToThe32 = 2^32
+    repeat (n) times {
+        var num := (math.random * twoToThe32).rounded
+        if (math.random >= 0.5) then { num := -num }
+        result.add(num)
+    }
+    result
 }
 
 method randomStrings(n) {
@@ -182,3 +272,7 @@ method printMetrics (desc) forFun (fn) onData (d) {
     q.chiSquaredModP.do { each -> print "    {each}" }
     print ""
 }
+
+
+
+
