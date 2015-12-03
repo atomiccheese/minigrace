@@ -866,7 +866,7 @@ GraceBoolean.prototype = {
             return new GraceString("" + this._value)
         },
         "==": function(argcv, other) {
-            if (this == other)
+            if (this === other)
                 return GraceTrue;
             return (this._value === Grace_isTrue(other)) ? GraceTrue : GraceFalse;
         },
