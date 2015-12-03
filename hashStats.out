@@ -1,0 +1,168 @@
+Hash Quality Measurements of .hash on 1..1000
+    Size of data set: 1000
+    Collision Rate = 1
+    Hash quality = 100%
+    χ² = 0; histogram = [1000, 0, 0, 0, 0]
+    χ²_1024 = 0; histogram = [1000, 0, 0, 0, 0]
+    χ²_1031 = 0; histogram = [1000, 0, 0, 0, 0]
+    χ²_1448 = 0; histogram = [1000, 0, 0, 0, 0]
+    χ²_1451 = 0; histogram = [1000, 0, 0, 0, 0]
+    χ²_2048 = 0; histogram = [1000, 0, 0, 0, 0]
+    χ²_2053 = 0; histogram = [1000, 0, 0, 0, 0]
+    χ²_2896 = 0; histogram = [1000, 0, 0, 0, 0]
+    χ²_2897 = 0; histogram = [1000, 0, 0, 0, 0]
+
+Hash Quality Measurements of .hash on 1000 random numbers
+    Size of data set: 1000
+    Collision Rate = 1
+    Hash quality = 100%
+    χ² = 0; histogram = [1000, 0, 0, 0, 0]
+    χ²_1024 = 0.674; histogram = [357, 182, 58, 20, 5]
+    χ²_1031 = 0.603; histogram = [398, 172, 62, 14, 3]
+    χ²_1448 = 0.43; histogram = [500, 173, 36, 9, 2]
+    χ²_1451 = 0.385; histogram = [501, 177, 43, 4, 0]
+    χ²_2048 = 0.291; histogram = [601, 149, 31, 2, 0]
+    χ²_2053 = 0.248; histogram = [632, 150, 20, 2, 0]
+    χ²_2896 = 0.205; histogram = [708, 115, 18, 2, 0]
+    χ²_2897 = 0.171; histogram = [723, 119, 13, 0, 0]
+
+Hash Quality Measurements of .hashJ6 on 1..1000
+    Size of data set: 1000
+    Collision Rate = 1
+    Hash quality = 100%
+    χ² = 0; histogram = [1000, 0, 0, 0, 0]
+    χ²_1024 = 0.632; histogram = [378, 175, 65, 13, 5]
+    χ²_1031 = 0.675; histogram = [370, 168, 67, 19, 3]
+    χ²_1448 = 0.456; histogram = [498, 158, 49, 6, 3]
+    χ²_1451 = 0.421; histogram = [477, 179, 47, 6, 0]
+    χ²_2048 = 0.263; histogram = [631, 144, 23, 3, 0]
+    χ²_2053 = 0.299; histogram = [583, 163, 25, 4, 0]
+    χ²_2896 = 0.213; histogram = [695, 124, 16, 1, 1]
+    χ²_2897 = 0.196; histogram = [698, 124, 18, 0, 0]
+
+Hash Quality Measurements of .hashJ6 on 1000 random numbers
+    Size of data set: 1000
+    Collision Rate = 1
+    Hash quality = 100%
+    χ² = 0; histogram = [1000, 0, 0, 0, 0]
+    χ²_1024 = 0.6; histogram = [383, 177, 69, 10, 3]
+    χ²_1031 = 0.635; histogram = [382, 180, 55, 18, 4]
+    χ²_1448 = 0.418; histogram = [509, 181, 27, 8, 3]
+    χ²_1451 = 0.376; histogram = [479, 199, 38, 1, 1]
+    χ²_2048 = 0.269; histogram = [615, 151, 25, 2, 0]
+    χ²_2053 = 0.277; histogram = [625, 146, 22, 3, 1]
+    χ²_2896 = 0.196; histogram = [699, 132, 7, 4, 0]
+    χ²_2897 = 0.195; histogram = [694, 130, 14, 1, 0]
+
+Hash Quality Measurements of .hash on 1000 random strings
+    Size of data set: 1000
+    Collision Rate = 1
+    Hash quality = 100%
+    χ² = 0; histogram = [1000, 0, 0, 0, 0]
+    χ²_1024 = 0.662; histogram = [351, 192, 57, 17, 5]
+    χ²_1031 = 0.567; histogram = [391, 189, 55, 14, 2]
+    χ²_1448 = 0.395; histogram = [492, 187, 34, 8, 0]
+    χ²_1451 = 0.415; histogram = [518, 167, 41, 2, 3]
+    χ²_2048 = 0.305; histogram = [575, 168, 23, 5, 0]
+    χ²_2053 = 0.326; histogram = [601, 146, 28, 3, 2]
+    χ²_2896 = 0.176; histogram = [703, 132, 11, 0, 0]
+    χ²_2897 = 0.185; histogram = [684, 144, 8, 1, 0]
+
+Hash Quality Measurements of .hashJ5 on 1000 random strings
+    Size of data set: 1000
+    Collision Rate = 1
+    Hash quality = 100%
+    χ² = 0; histogram = [1000, 0, 0, 0, 0]
+    χ²_1024 = 0.575; histogram = [393, 186, 56, 13, 3]
+    χ²_1031 = 0.67; histogram = [368, 169, 67, 17, 5]
+    χ²_1448 = 0.386; histogram = [511, 175, 37, 7, 0]
+    χ²_1451 = 0.461; histogram = [506, 153, 47, 8, 3]
+    χ²_2048 = 0.262; histogram = [636, 144, 21, 2, 1]
+    χ²_2053 = 0.242; histogram = [641, 142, 25, 0, 0]
+    χ²_2896 = 0.175; histogram = [733, 113, 11, 2, 0]
+    χ²_2897 = 0.178; histogram = [709, 126, 13, 0, 0]
+
+Hash Quality Measurements of .hashJ6 on 1000 random strings
+    Size of data set: 1000
+    Collision Rate = 1
+    Hash quality = 100%
+    χ² = 0; histogram = [1000, 0, 0, 0, 0]
+    χ²_1024 = 0.604; histogram = [372, 191, 58, 13, 4]
+    χ²_1031 = 0.602; histogram = [383, 187, 59, 10, 5]
+    χ²_1448 = 0.419; histogram = [494, 171, 44, 8, 0]
+    χ²_1451 = 0.473; histogram = [476, 173, 40, 12, 2]
+    χ²_2048 = 0.271; histogram = [614, 155, 20, 4, 0]
+    χ²_2053 = 0.295; histogram = [583, 161, 29, 2, 0]
+    χ²_2896 = 0.201; histogram = [716, 111, 18, 2, 0]
+    χ²_2897 = 0.196; histogram = [712, 115, 18, 1, 0]
+
+Hash Quality Measurements of .hashP on 1000 random strings
+    Size of data set: 1000
+    Collision Rate = 1
+    Hash quality = 100%
+    χ² = 0; histogram = [1000, 0, 0, 0, 0]
+    χ²_1024 = 0.589; histogram = [407, 163, 67, 14, 2]
+    χ²_1031 = 0.635; histogram = [383, 185, 51, 18, 4]
+    χ²_1448 = 0.45; histogram = [499, 164, 41, 10, 2]
+    χ²_1451 = 0.373; histogram = [508, 182, 37, 3, 1]
+    χ²_2048 = 0.272; histogram = [616, 154, 21, 2, 1]
+    χ²_2053 = 0.266; histogram = [622, 155, 17, 3, 1]
+    χ²_2896 = 0.206; histogram = [706, 116, 18, 2, 0]
+    χ²_2897 = 0.184; histogram = [711, 123, 13, 1, 0]
+
+Hash Quality Measurements of .hash on mg words
+    Size of data set: 3022
+    Collision Rate = 1.000662
+    Hash quality = 99.933819%
+    χ² = 0.000662; histogram = [3018, 2, 0, 0, 0]
+    χ²_4096 = 0.496029; histogram = [1357, 530, 153, 29, 6]
+    χ²_4099 = 0.47816; histogram = [1426, 524, 128, 32, 7]
+    χ²_5793 = 0.318001; histogram = [1769, 471, 78, 18, 1]
+    χ²_5801 = 0.322965; histogram = [1791, 450, 83, 18, 2]
+    χ²_8192 = 0.230311; histogram = [2002, 416, 52, 8, 0]
+    χ²_8209 = 0.222369; histogram = [2045, 395, 54, 5, 1]
+    χ²_11585 = 0.133024; histogram = [2343, 302, 25, 0, 0]
+    χ²_11587 = 0.15321; histogram = [2299, 305, 35, 2, 0]
+
+Hash Quality Measurements of .hashJ5 on mg words
+    Size of data set: 3022
+    Collision Rate = 1.001989
+    Hash quality = 99.801456%
+    χ² = 0.001985; histogram = [3010, 6, 0, 0, 0]
+    χ²_4096 = 0.467902; histogram = [1436, 512, 137, 34, 3]
+    χ²_4099 = 0.439113; histogram = [1452, 525, 139, 22, 3]
+    χ²_5793 = 0.280278; histogram = [1802, 481, 78, 6, 0]
+    χ²_5801 = 0.307081; histogram = [1805, 452, 83, 16, 0]
+    χ²_8192 = 0.209464; histogram = [2080, 387, 48, 6, 0]
+    χ²_8209 = 0.212442; histogram = [2068, 388, 55, 2, 1]
+    χ²_11585 = 0.155195; histogram = [2290, 313, 30, 4, 0]
+    χ²_11587 = 0.142952; histogram = [2288, 328, 26, 0, 0]
+
+Hash Quality Measurements of .hashJ6 on mg words
+    Size of data set: 3022
+    Collision Rate = 1.001989
+    Hash quality = 99.801456%
+    χ² = 0.001985; histogram = [3010, 6, 0, 0, 0]
+    χ²_4096 = 0.472866; histogram = [1411, 529, 139, 24, 8]
+    χ²_4099 = 0.462938; histogram = [1437, 515, 143, 24, 6]
+    χ²_5793 = 0.300132; histogram = [1796, 463, 84, 12, 0]
+    χ²_5801 = 0.31734; histogram = [1737, 477, 99, 6, 2]
+    χ²_8192 = 0.221046; histogram = [2059, 385, 55, 7, 0]
+    χ²_8209 = 0.195235; histogram = [2100, 398, 35, 4, 1]
+    χ²_11585 = 0.136003; histogram = [2330, 307, 26, 0, 0]
+    χ²_11587 = 0.136003; histogram = [2315, 319, 23, 0, 0]
+
+Hash Quality Measurements of .hashP on mg words
+    Size of data set: 3022
+    Collision Rate = 1
+    Hash quality = 100%
+    χ² = 0; histogram = [3022, 0, 0, 0, 0]
+    χ²_4096 = 0.45632; histogram = [1450, 521, 132, 26, 6]
+    χ²_4099 = 0.465917; histogram = [1442, 519, 133, 28, 6]
+    χ²_5793 = 0.302449; histogram = [1782, 469, 87, 9, 1]
+    χ²_5801 = 0.278623; histogram = [1831, 472, 71, 6, 2]
+    χ²_8192 = 0.207148; histogram = [2111, 362, 57, 4, 0]
+    χ²_8209 = 0.204831; histogram = [2070, 399, 46, 4, 0]
+    χ²_11585 = 0.126406; histogram = [2400, 275, 20, 3, 0]
+    χ²_11587 = 0.141297; histogram = [2287, 334, 21, 1, 0]
+
