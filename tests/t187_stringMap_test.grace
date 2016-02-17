@@ -47,6 +47,13 @@ def stringMapTest = object {
         method testGetAbsent {
             assert {m123.get "foo"} shouldRaise (NoSuchObject)
         }
+        method testGetPresentValueOf {
+            m123.put("valueOf", 19)
+            assert (m123.get "valueOf") shouldBe 19
+        }
+        method testGetAbsentValueOf {
+            assert {m123.get "valueOf"} shouldRaise (NoSuchObject)
+        }
         method testGetIfAbsentPresent {
             assert (m123.get "two" ifAbsent { failBecause "two is absent" }) shouldBe 2
         }
