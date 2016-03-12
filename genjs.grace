@@ -1264,6 +1264,51 @@ method compileNativeCode(o) {
     o.register := reg
     out "   // end native code insertion"
 }
+method compileOptimizedWhileDo(o) {
+    if ( (o.with.size != 2).
+          orElse {o.with.first.args.size != 1}.
+          orElse {o.with.second.args.size != 1} )  then {
+        errormessages.syntaxError("method 'while(_)do(_)' takes two arguments, " ++
+            "one following 'while' and the other following 'do'.")
+            atRange(o.line, o.linePos, o.linePos + 4)
+    }
+    def whileCondition = o.with.first.args.first
+    def whileBody = o.with.second.args.first
+    if ((whileCondition.isBlock) && (whileBody.isBlock)) then {
+        if (! whileCondition.params.isEmpty) then {
+            def p = whileCondition.params.first
+            errormessages.syntaxError
+                  "the condition in a while block should have no parameters"
+                      atRange(p.line, p.linePos, p.linePos + p.size - 1)
+        }
+        if (! whileBody.params.isEmpty) then {
+            def p = whileBody.params.first
+            errormessages.syntaxError
+                  "the body of a while block should have no parameters"
+                      atRange(p.line, p.linePos, p.linePos + p.size - 1)
+        }
+        var myc := auto_count
+        auto_count := auto_count + 1
+        out "var cond{myc} = () => \{"
+        increaseindent
+        noteLineNumber(whileCondition.line)comment "condition of optimized while"
+        var ret := "GraceDone"
+        whileCondition.body.do { expr ->
+            ret := compilenode(expr)
+        }
+        out("return " ++ ret ++ ";")
+        decreaseindent
+        out "\};"
+        out "while (Grace_isTrue(cond{myc}())) \{"
+        increaseindent
+        whileBody.body.do { expr -> compilenode(expr) }
+        decreaseindent
+        out "\}"
+        o.register := "GraceDone"
+    } else {
+        compilecall(o)
+    }
+}
 
 method compilenode(o) {
     compilationDepth := compilationDepth + 1
@@ -1319,10 +1364,13 @@ method compilenode(o) {
         compilemember(o)
     } elseif { oKind == "call" } then {
         if (o.value.isMember.andAlso{o.value.in.value == "prelude"}) then {
-            if (o.nameString == "print") then {
+            def methodName = o.nameString
+            if (methodName == "print") then {
                 compilePrint(o)
-            } elseif {o.nameString == "native()code"} then {
+            } elseif {methodName == "native()code"} then {
                 compileNativeCode(o)
+            } elseif {methodName == "while()do"} then {
+                compileOptimizedWhileDo(o)
             } else {
                 compilecall(o)
             }
