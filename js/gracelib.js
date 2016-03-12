@@ -143,6 +143,17 @@ function capitalize(str)
     return str.replace(/^.|\s\S/g, function(a) { return a.toUpperCase(); });
 }
 
+var stringLiterals = {};
+
+function stringLiteral(s) {
+    if (stringLiterals.hasOwnProperty(s)) {
+        return stringLiterals[s];
+    }
+    var result = new GraceString(s);
+    stringLiterals[s] = result;
+    return result;
+}
+
 function GraceString(s) {
     this._value = s;
 }
@@ -264,7 +275,7 @@ GraceString.prototype = {
         "indexOf": function string_indexOf (argcv, needle, block0) {
             var self = this._value;
             var result = self.indexOf(needle._value);
-            if (result === -1) { return new GraceNum(0); }
+            if (result === -1) { return numeral(0); }
             return new GraceNum(result + 1);
         },
         "indexOf()ifAbsent": function string_indexOf_ifAbsent (argcv, needle, block0) {
@@ -277,7 +288,7 @@ GraceString.prototype = {
             var self = this._value;
             var start = startPos._value - 1;
             var result = self.indexOf(needle._value, start);
-            if (result === -1) { return new GraceNum(0); }
+            if (result === -1) { return numeral(0); }
             return new GraceNum(result + 1);
         },
         "indexOf()startingAt()ifAbsent": function string_indexOf_startingAt_ifAbsent (argcv, needle, startPos, block0) {
@@ -290,14 +301,14 @@ GraceString.prototype = {
         "lastIndexOf()": function string_lastIndexOf_ifAbsent (argcv, needle, block0) {
             var self = this._value;
             var result = self.lastIndexOf(needle._value);
-            if (result === -1) { return new GraceNum(0); }
+            if (result === -1) { return numeral(0); }
             return new GraceNum(result + 1);
         },
         "lastIndexOf()startingAt": function string_lastIndexOf_startingAt (argcv, needle, startPos) {
             var self = this._value;
             var start = startPos._value - 1;
             var result = self.lastIndexOf(needle._value, start);
-            if (result === -1) { return new GraceNum(0); }
+            if (result === -1) { return numeral(0); }
             return new GraceNum(result + 1);
         },
         "lastIndexOf()startingAt()ifAbsent": function string_lastIndexOf_startingAt_ifAbsent (argcv, needle, startPos, block0) {
@@ -402,7 +413,7 @@ GraceString.prototype = {
         "compare": function string_compare (argcv, that) {
             var self = this._value;
             var other = that._value;
-            if (self === other) return new GraceNum(0);
+            if (self === other) return numeral(0);
             if (self > other) return new GraceNum(+1);
             return new GraceNum(-1);
         },
@@ -469,7 +480,7 @@ GraceString.prototype = {
         "hash": string_hash,
         "indices": function string_indices(argcv) {
             var size = this._value.length;
-            return callmethod(GraceRangeClass(), "from()to", [1, 1], new GraceNum(1), new GraceNum(size));
+            return callmethod(GraceRangeClass(), "from()to", [1, 1], numeral(1), new GraceNum(size));
         },
         "asNumber": function string_asNumber(argcv) {
             return new GraceNum(+this._value);
@@ -558,7 +569,18 @@ GraceString.prototype = {
     superobj: new GraceObject()
 };
 
-var GraceEmptyString = new GraceString("");
+var GraceEmptyString = stringLiteral("");
+
+var numerals = {};
+
+function numeral(n) {
+    if (numerals.hasOwnProperty(n)) {
+        return numerals[n];
+    }
+    var result = new GraceNum(n);
+    numerals[n] = result;
+    return result;
+}
 
 function GraceNum(n) {
     this._value = n;
@@ -633,7 +655,7 @@ GraceNum.prototype = {
         "compare": function(argcv, that) {
             var self = this._value;
             var other = that._value;
-            if (self === other) return new GraceNum(0);
+            if (self === other) return numeral(0);
             if (self > other) return new GraceNum(+1);
             return new GraceNum(-1);
         },
@@ -881,7 +903,7 @@ function prim_list_update(argcv, where, val) {
 function list_indices(argcv) {
     var size = this._value.length;
     return callmethod(GraceRangeClass(), "from()to", [1, 1],
-                  new GraceNum(1), new GraceNum(size));
+                  numeral(1), new GraceNum(size));
 }
 PrimitiveGraceList.prototype = {
     methods: {
@@ -1580,7 +1602,7 @@ var var_Done = new GraceType("Done");
 var_Done.typeMethods.push("asString");
 var_Done.typeMethods.push("asDebugString");
 var var_String = classType(GraceEmptyString);
-var var_Number = classType(new GraceNum(1));
+var var_Number = classType(numeral(1));
 var var_Boolean = classType(GraceTrue);
 var var_Object = classType(new GraceObject);
     var_Object.name = "Object";
@@ -2222,7 +2244,7 @@ function gracecode_util() {
     this.methods['log()verbose'] = util_log_verbose;
 
     this.methods['log_verbose'] = function (argcv, s) {
-        util_log_verbose([1, 1], new GraceNum(40), s);
+        util_log_verbose([1, 1], numeral(40), s);
     };
     this.methods.outprint = function util_outprint(argcv, s) {
         minigrace.stdout_write(s._value + "\n");
@@ -2235,7 +2257,8 @@ function gracecode_util() {
         var meth_isAlready = function(argcv) {    // method isAlready(1)
             var var_moduleName = arguments[1];
             if (argcv[0] !== 1)
-                callmethod(ProgrammingErrorObject, "raise", [1], new GraceString("wrong number of arguments for isAlready(1)"));
+                callmethod(ProgrammingErrorObject, "raise", [1],
+                    new GraceString("wrong number of arguments for isAlready(1)"));
             setModuleName("util");
             onSelf = true;
             var staticv = callmethod(this, "static", [0]);
@@ -2476,8 +2499,8 @@ function gracecode_util() {
     this.methods.suggestion = function util_suggestion() {
         return this._suggestion;
     };
-    this._linenum = new GraceNum(1);
-    this._linepos = new GraceNum(1);
+    this._linenum = numeral(1);
+    this._linepos = numeral(1);
     this._lines = new GraceList([]);
     this._cLines = new GraceList([]);
     this._suggestion = Grace_allocObject(GraceObject, "class suggestion");
@@ -2552,7 +2575,7 @@ GraceMirrorMethod.prototype.methods['isVariableArity'] = function(argcv) {
 GraceMirrorMethod.prototype.methods['request'] = function(argcv, argList) {
     if (! argList) {
         throw new GraceExceptionPacket(ProgrammingErrorObject,
-                new GraceString("'request' requires one argument (a list of arg lists)"));
+                new GraceString("'request' requires one argument (a list of argument lists)"));
     }
     var theFunction = this.obj.methods[this.name];
     var requiredLen = theFunction.paramCounts.length;
@@ -2576,7 +2599,7 @@ GraceMirrorMethod.prototype.methods['request'] = function(argcv, argList) {
 GraceMirrorMethod.prototype.methods['requestWithArgs'] = function(argcv, argList) {
     if (! argList) {
         throw new GraceExceptionPacket(ProgrammingErrorObject,
-                new GraceString("'request' requires one argument (a list of arguments)"));
+                new GraceString("'requestWithArgs' requires one argument (a list of arguments)"));
     }
     var theFunction = this.obj.methods[this.name];
     var paramcv = theFunction.paramCounts;
@@ -3426,6 +3449,7 @@ if (typeof global !== "undefined") {
     global.loadDate = loadDate;
     global.matchCase = matchCase;
     global.NoSuchMethodErrorObject = NoSuchMethodErrorObject;
+    global.numeral = numeral;
     global.PrimitiveGraceList = PrimitiveGraceList;
     global.ProgrammingErrorObject = ProgrammingErrorObject;
     global.ResourceExceptionObject = ResourceExceptionObject;
@@ -3434,6 +3458,7 @@ if (typeof global !== "undefined") {
     global.setLineNumber = setLineNumber;
     global.setModuleName = setModuleName;
     global.StackFrame = StackFrame;
+    global.stringLiteral = stringLiteral;
     global.tryCatch = tryCatch;
     global.type_Boolean = type_Boolean;
     global.type_Block = type_Block;

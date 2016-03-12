@@ -1172,7 +1172,7 @@ method compiledialect(o) {
     out "this.outer = var_prelude;"
     if (xmodule.currentDialect.hasAtStart) then {
         out "callmethod(var_prelude, \"atModuleStart\", [1], "
-        out "  new GraceString(\"{escapestring(modname)}\"));"
+        out "  stringLiteral(\"{escapestring(modname)}\"));"
     }
     o.register := "undefined"
 }
@@ -1315,15 +1315,12 @@ method compilenode(o) {
     noteLineNumber(o.line)comment "compilenode {o.kind}"
     def oKind = o.kind
     if (oKind == "num") then {
-        o.register := "new GraceNum(" ++ o.value ++ ")"
+        o.register := "numeral(" ++ o.value ++ ")"
     }
     if (oKind == "string") then {
         // Escape characters that may not be legal in string literals
         def os = escapestring(o.value)
-        out("var string" ++ auto_count ++ " = new GraceString(\""
-            ++ os ++ "\");")
-        o.register := "string" ++ auto_count
-        auto_count := auto_count + 1
+        o.register := "stringLiteral(\"" ++ os ++ "\")"
     } elseif { oKind == "index" } then {
         compileindex(o)
     } elseif { oKind == "dialect" } then {
