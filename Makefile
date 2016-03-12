@@ -224,6 +224,7 @@ js/grace: js/grace.in
 
 js/grace-debug: js/grace
 	sed -e "s|#!/usr/bin/env node|#!/usr/bin/env node --debug-brk|" $< > js/grace-debug
+	chmod a+x js/grace-debug
 
 js/minigrace.js: js/minigrace.in.js buildinfo.grace
 	@echo Generating minigrace.js from minigrace.in.js...
