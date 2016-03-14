@@ -274,6 +274,11 @@ def ifNode is public = object {
         s
     }
     method shallowCopy {
+        native "js" code ‹return callmethod(var_prelude, "clone", [1], this);›
+        // Why use native code here?  This can be written in Grace!
+        // Because the C version of clone doesn't work — it causes a segfault.
+        // The JS version is faster.  The native code insert essentially causes
+        // conditional compilation based on the execution language.
         ifNode.new(nullNode, nullNode, nullNode).shallowCopyFieldsFrom(self)
     }
     method shallowCopyFieldsFrom(other) {
@@ -390,6 +395,7 @@ def blockNode is public = object {
         s
     }
     method shallowCopy {
+        native "js" code ‹return callmethod(var_prelude, "clone", [1], this);›
         blockNode.new(params, body).shallowCopyFieldsFrom(self)
     }
     method shallowCopyFieldsFrom(other) {
@@ -459,6 +465,7 @@ def tryCatchNode is public = object {
         s
     }
     method shallowCopy {
+        native "js" code ‹return callmethod(var_prelude, "clone", [1], this);›
         tryCatchNode.new(nullNode, emptySeq, false).shallowCopyFieldsFrom(self)
     }
   }
@@ -522,6 +529,7 @@ def matchCaseNode is public = object {
         s
     }
     method shallowCopy {
+        native "js" code ‹return callmethod(var_prelude, "clone", [1], this);›
         matchCaseNode.new(nullNode, emptySeq, false).shallowCopyFieldsFrom(self)
     }
   }
@@ -639,6 +647,7 @@ def methodTypeNode is public = object {
         s
     }
     method shallowCopy {
+        native "js" code ‹return callmethod(var_prelude, "clone", [1], this);›
         methodTypeNode.new(value, emptySeq, false).shallowCopyFieldsFrom(self)
     }
   }
@@ -715,6 +724,7 @@ def typeLiteralNode is public = object {
         s ++ "\}"
     }
     method shallowCopy {
+        native "js" code ‹return callmethod(var_prelude, "clone", [1], this);›
         typeLiteralNode.new(emptySeq, emptySeq).shallowCopyFieldsFrom(self)
     }
     method shallowCopyFieldsFrom(other) {
@@ -807,6 +817,7 @@ def typeDecNode is public = object {
         s ++ " = " ++ value.toGrace(depth + 2)
     }
     method shallowCopy {
+        native "js" code ‹return callmethod(var_prelude, "clone", [1], this);›
         typeDecNode.new(name, nullNode).shallowCopyFieldsFrom(self)
     }
   }
@@ -1018,6 +1029,7 @@ def methodNode = object {
             s
         }
         method shallowCopy {
+            native "js" code ‹return callmethod(var_prelude, "clone", [1], this);›
             methodNode.new(value, signature, body, dtype).shallowCopyFieldsFrom(self)
         }
         method shallowCopyFieldsFrom(other) {
@@ -1165,6 +1177,7 @@ def callNode = object {
         }
         method asString { "call {what.pretty(0)}" }
         method shallowCopy {
+            native "js" code ‹return callmethod(var_prelude, "clone", [1], this);›
             callNode.new(value, with).shallowCopyFieldsFrom(self)
         }
         method shallowCopyFieldsFrom(other) {
@@ -1213,6 +1226,7 @@ def moduleNode = object {
             }
         }
         method shallowCopy {
+            native "js" code ‹return callmethod(var_prelude, "clone", [1], this);›
             moduleNode.body(emptySeq).shallowCopyFieldsFrom(self)
         }
         method shallowCopyFieldsFrom(other) {
@@ -1380,6 +1394,7 @@ def objectNode is public = object {
             s
         }
         method shallowCopy {
+            native "js" code ‹return callmethod(var_prelude, "clone", [1], this);›
             objectNode.new(emptySeq, false).shallowCopyFieldsFrom(self)
         }
         method shallowCopyFieldsFrom(other) {
@@ -1440,6 +1455,7 @@ def arrayNode is public = object {
         s
     }
     method shallowCopy {
+        native "js" code ‹return callmethod(var_prelude, "clone", [1], this);›
         arrayNode.new(emptySeq).shallowCopyFieldsFrom(self)
     }
   }
@@ -1522,6 +1538,7 @@ def memberNode = object {
             return resultNode
         }
         method shallowCopy {
+            native "js" code ‹return callmethod(var_prelude, "clone", [1], this);›
             memberNode.new(value, nullNode).shallowCopyFieldsFrom(self)
         }
         method statementName { "expression" }
@@ -1567,6 +1584,7 @@ def genericNode is public = object {
         s ++ ">"
     }
     method shallowCopy {
+        native "js" code ‹return callmethod(var_prelude, "clone", [1], this);›
         genericNode.new(value, args).shallowCopyFieldsFrom(self)
     }
   }
@@ -1615,6 +1633,7 @@ def typeParametersNode is public = object {
         s ++ ">"
     }
     method shallowCopy {
+        native "js" code ‹return callmethod(var_prelude, "clone", [1], this);›
         typeParametersNode.new(emptySeq).shallowCopyFieldsFrom(self)
     }
   }
@@ -1730,6 +1749,7 @@ def identifierNode = object {
             }
         }
         method shallowCopy {
+            native "js" code ‹return callmethod(var_prelude, "clone", [1], this);›
             identifierNode.new(value, false).shallowCopyFieldsFrom(self)
         }
         method shallowCopyFieldsFrom(other) {
@@ -1775,6 +1795,7 @@ def stringNode = object {
             q ++ value.quoted ++ q
         }
         method shallowCopy {
+            native "js" code ‹return callmethod(var_prelude, "clone", [1], this);›
             stringNode.new(value).shallowCopyFieldsFrom(self)
         }
         method statementName { "expression" }
@@ -1801,6 +1822,7 @@ def numNode is public = object {
         }
         method asString { "num {value}" }
         method shallowCopy {
+            native "js" code ‹return callmethod(var_prelude, "clone", [1], this);›
             numNode.new(value).shallowCopyFieldsFrom(self)
         }
         method statementName { "expression" }
@@ -1869,6 +1891,7 @@ def opNode is public = object {
         return resultNode
     }
     method shallowCopy {
+        native "js" code ‹return callmethod(var_prelude, "clone", [1], this);›
         opNode.new(value, nullNode, nullNode).shallowCopyFieldsFrom(self)
     }
   }
@@ -1916,6 +1939,7 @@ def indexNode is public = object {
         s
     }
     method shallowCopy {
+        native "js" code ‹return callmethod(var_prelude, "clone", [1], this);›
         indexNode.new(nullNode, nullNode).shallowCopyFieldsFrom(self)
     }
   }
@@ -1965,6 +1989,7 @@ def bindNode is public = object {
         s
     }
     method shallowCopy {
+        native "js" code ‹return callmethod(var_prelude, "clone", [1], this);›
         bindNode.new(dest, value).shallowCopyFieldsFrom(self)
     }
     method statementName { "assignment or assigment request" }
@@ -2077,6 +2102,7 @@ def defDecNode = object {
             s
         }
         method shallowCopy {
+            native "js" code ‹return callmethod(var_prelude, "clone", [1], this);›
             defDecNode.new(name, value, dtype).shallowCopyFieldsFrom(self)
         }
         method shallowCopyFieldsFrom(other) {
@@ -2189,6 +2215,7 @@ def varDecNode is public = object {
         s
     }
     method shallowCopy {
+        native "js" code ‹return callmethod(var_prelude, "clone", [1], this);›
         varDecNode.new(name, value, dtype).shallowCopyFieldsFrom(self)
     }
     method statementName { "variable declaration" }
@@ -2268,6 +2295,7 @@ def importNode is public = object {
         "import \"{self.path}\" as {nameString}"
     }
     method shallowCopy {
+        native "js" code ‹return callmethod(var_prelude, "clone", [1], this);›
         importNode.new(path, nullNode, false).shallowCopyFieldsFrom(self)
     }
   }
@@ -2316,6 +2344,7 @@ def dialectNode is public = object {
         "dialect \"{self.value}\""
     }
     method shallowCopy {
+        native "js" code ‹return callmethod(var_prelude, "clone", [1], this);›
         dialectNode.new(value).shallowCopyFieldsFrom(self)
     }
   }
@@ -2351,6 +2380,7 @@ def returnNode is public = object {
         "return " ++ self.value.toGrace(depth)
     }
     method shallowCopy {
+        native "js" code ‹return callmethod(var_prelude, "clone", [1], this);›
         returnNode.new(nullNode).shallowCopyFieldsFrom(self)
     }
   }
@@ -2437,6 +2467,7 @@ def inheritsNode = object {
             exclusions.push(methName)
         }
         method shallowCopy {
+            native "js" code ‹return callmethod(var_prelude, "clone", [1], this);›
             inheritsNode.new(nullNode).shallowCopyFieldsFrom(self)
         }
         method shallowCopyFieldsFrom(other) {
@@ -2496,6 +2527,7 @@ def blankNode is public = object {
         method asString { "blank" }
         method toGrace(depth : Number) -> String { "" }
         method shallowCopy {
+            native "js" code ‹return callmethod(var_prelude, "clone", [1], this);›
             blankNode.new.shallowCopyFieldsFrom(self)
         }
     }
@@ -2574,6 +2606,7 @@ def signaturePart = object {
             s
         }
         method shallowCopy {
+            native "js" code ‹return callmethod(var_prelude, "clone", [1], this);›
             signaturePart.partName(name) params(params) variableParam(vararg)
                 .shallowCopyFieldsFrom(self)
         }
@@ -2623,6 +2656,7 @@ def callWithPart = object {
             s
         }
         method shallowCopy {
+            native "js" code ‹return callmethod(var_prelude, "clone", [1], this);›
             callWithPart.request(name) withArgs(args).shallowCopyFieldsFrom(self)
         }
         method shallowCopyFieldsFrom(other) {
@@ -2678,6 +2712,7 @@ def commentNode = object {
             }
         }
         method shallowCopy {
+            native "js" code ‹return callmethod(var_prelude, "clone", [1], this);›
             commentNode.new(nullNode).shallowCopyFieldsFrom(self)
         }
         method shallowCopyFieldsFrom(other) {
