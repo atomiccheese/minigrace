@@ -1541,10 +1541,10 @@ function GraceBlock_apply(argcv) {
         // makes a copy of arguments, without element at index 0
     var len = args.length;
     if (args.length !== this.numParams) {
-        var plural = (len === 1) ? "" : "s";
+        var plural = (this.numParams === 1) ? "" : "s";
         throw new GraceExceptionPacket(ProgrammingErrorObject,
-            new GraceString("block applied to " + len + " argument" +
-                plural + " where " + this.numParams + " expected."));
+            new GraceString("block takes " + this.numParams + " argument" +
+                plural + " but given " + len + "."));
     }
     var match;
     superDepth = this.receiver;
@@ -3298,6 +3298,7 @@ function clone (obj) {
     copy.outer = obj.outer;
     copy.definitionModule = obj.definitionModule;
     copy.definitionLine = obj.definitionLine;
+    copy.data = {};
     for (var attr in obj.data) {
         if (obj.data.hasOwnProperty(attr))
             copy.data[attr] = obj.data[attr];
@@ -3450,6 +3451,7 @@ if (typeof global !== "undefined") {
     global.setModuleName = setModuleName;
     global.StackFrame = StackFrame;
     global.stringLiteral = stringLiteral;
+    global.superDepth = "never initialized";
     global.tryCatch = tryCatch;
     global.type_Boolean = type_Boolean;
     global.type_Block = type_Block;
