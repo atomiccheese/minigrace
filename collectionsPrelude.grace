@@ -375,7 +375,7 @@ class indexable.TRAIT<T> {
     method keysAndValuesDo(action:Block2<Number,T,Done>) -> Done {
         def curSize = size
         var i := 1
-        while {i <= curSize} do {
+        while { i <= curSize } do {
             action.apply(i, self.at(i))
             i := i + 1
         }
@@ -1187,8 +1187,10 @@ class set<T> {
         var mods is readable := 0
         var inner := _prelude.PrimitiveArray.new(cap)
         var size is readable := 0
-        (0..(cap - 1)).do { i ->
-            inner.at (i) put (unused)
+        var ix := 0
+        while { ix < cap } do {
+            inner.at (ix) put (unused)
+            ix := ix + 1
         }
 
         method addAll(elements) {
@@ -1483,9 +1485,12 @@ class dictionary<K,T> {
         inherits collection.TRAIT<T>
         var mods is readable := 0
         var numBindings := 0
-        var inner := _prelude.PrimitiveArray.new(8)
-        for (0..(inner.size-1)) do { i ->
-            inner.at(i)put(unused)
+        var innerSize := 8
+        var inner := _prelude.PrimitiveArray.new(innerSize)
+        var ix := 0
+        while { ix < innerSize } do {
+            inner.at (ix) put (unused)
+            ix := ix + 1
         }
         method size { numBindings }
         method at(key')put(value') {
@@ -1754,14 +1759,16 @@ class dictionary<K,T> {
             def n = c * 2
             def oldInner = inner
             inner := _prelude.PrimitiveArray.new(n)
-            for (0..(n - 1)) do {i->
-                inner.at(i)put(unused)
+            var i := 0
+            while { i < n } do {
+                inner.at (i) put (unused)
             }
             numBindings := 0
-            for (0..(c - 1)) do {i->
+            i := 0
+            while { i < c } do {
                 def a = oldInner.at(i)
                 if (different(a, unused) && (different(a, removed))) then {
-                    self.at(a.key)put(a.value)
+                    self.at (a.key) put (a.value)
                 }
             }
         }
