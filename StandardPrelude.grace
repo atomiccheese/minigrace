@@ -1,4 +1,5 @@
 #pragma NativePrelude
+#pragma ExtendedLineups
 
 var isStandardPrelude := true
 
@@ -82,14 +83,12 @@ class MatchAndDestructuringPattern.new(pat, items') {
                     return FailedMatch.new(o)
                 }
             }
-            for (items.indices) do {i->
-                def b = items[i].match(mbindings[i])
+            for (items) and (mbindings) do { each, bind ->
+                def b = each.match(bind)
                 if (!b) then {
                     return FailedMatch.new(o)
                 }
-                for (b.bindings) do {bb->
-                    bindings.push(bb)
-                }
+                bindings.addAll(b.bindings)
             }
             SuccessfulMatch.new(o, bindings)
         } else {
@@ -108,15 +107,11 @@ class VariablePattern.new(nm) {
 class BindingPattern.new(pat) {
     inherits BasicPattern.new
     method match(o) {
-        def bindings = [o]
         def m = pat.match(o)
         if (!m) then {
             return m
         }
-        for (m.bindings) do {b->
-            bindings.push(b)
-        }
-        SuccessfulMatch.new(o, bindings)
+        SuccessfulMatch.new(o, [o] ++ m.bindings)
     }
 }
 
@@ -138,14 +133,7 @@ class AndPattern.new(p1, p2) {
         if (!m2) then {
             return m2
         }
-        def bindings = []
-        for (m1.bindings) do {b->
-            bindings.push(b)
-        }
-        for (m2.bindings) do {b->
-            bindings.push(b)
-        }
-        SuccessfulMatch.new(o, bindings)
+        SuccessfulMatch.new(o, m1.bindings ++ m2.bindings)
     }
 }
 
