@@ -2841,66 +2841,24 @@ method methodsignature(sameline) {
         next
         var id
         var comma := false
-        while {accept("identifier") ||
-                (accept("op") && (sym.value == "*"))} do {
+        while { accept "identifier" } do {
             // Parse the parameter list, including optional dtype
             // annotations.
-            if (accept "op") then {
-                next
-                if(sym.kind != "identifier") then {
-                    def suggestions = [ ]
-                    var suggestion := errormessages.suggestion.new
-                    suggestion.insert("«parameter name»")afterToken(lastToken)
-                    suggestions.push(suggestion)
-                    if(comma == false) then {
-                        suggestion := errormessages.suggestion.new
-                        suggestion.deleteToken(lastToken)
-                        suggestions.push(suggestion)
-                    } else {
-                        suggestion := errormessages.suggestion.new
-                        suggestion.deleteTokenRange(comma, lastToken)
-                        suggestions.push(suggestion)
-                    }
-                    errormessages.syntaxError("a variable length parameter (a parameter beginning with a '*') must have a name after the '*'.")atPosition(
-                        lastToken.line, lastToken.linePos + lastToken.size)withSuggestions(suggestions)
-                }
-                vararg := true
-                varargs := true
-            }
             pushidentifier
             id := values.pop
             id.isBindingOccurrence := true
             dtype := optionalTypeAnnotation
             id.dtype := dtype
-            if (vararg) then {
-                part.vararg := id
-                if(sym.kind != "rparen") then {
-                    def suggestion = errormessages.suggestion.new
-                    def rparen = findNextToken({ t -> (t.kind == "rparen") && (t.line == sym.line) })
-                    if((sym.kind == "comma") && (rparen != false)) then {
-                        suggestion.insert(",*{id.value}")beforeToken(rparen)
-                        suggestion.deleteTokenRange(lparen.next, sym)leading(true)trailing(false)
-                        errormessages.syntaxError("a variable length parameter (a parameter beginning with a '*') cannot have any more parameters after it.")atRange(
-                            lastToken.line, sym.linePos, rparen.linePos - 1)withSuggestion(suggestion)
-                    } else {
-                        suggestion.insert(")")afterToken(lastToken)
-                        errormessages.syntaxError("a part of a method beginning with a '(' must end with a ')'.")atPosition(
-                            lastToken.line, lastToken.linePos + lastToken.size)withSuggestion(suggestion)
-                    }
-                }
-            } else {
-                part.params.push(id)
-            }
+            part.params.push(id)
             if (accept "comma") then {
                 comma := sym
                 next
             } elseif { sym.kind != "rparen" } then {
-                if(sym.kind != "rparen") then {
-                    def suggestion = errormessages.suggestion.new
-                    suggestion.insert(")")afterToken(lastToken)
-                    errormessages.syntaxError("a part of a method beginning with a '(' must end with a ')'.")atPosition(
-                        lastToken.line, lastToken.linePos + lastToken.size)withSuggestion(suggestion)
-                }
+                def suggestion = errormessages.suggestion.new
+                suggestion.insert(")")afterToken(lastToken)
+                errormessages.syntaxError "a part of a method beginning with a '(' must end with a ')'."
+                    atRange(lastToken.line, lastToken.linePos + lastToken.size)
+                    withSuggestion(suggestion)
             }
         }
         if(sym.kind != "rparen") then {
