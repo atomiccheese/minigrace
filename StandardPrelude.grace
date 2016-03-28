@@ -3,26 +3,38 @@
 
 var isStandardPrelude := true
 
-class SuccessfulMatch.new(result', bindings') {
+class successfulMatch(result', bindings') {
     inherits true
     method result { result' }
     method bindings { bindings' }
     method asString {
-        "SuccessfulMatch(result = {result}, bindings = {bindings})"
+        "successfulMatch(result = {result}, bindings = {bindings})"
     }
 }
 
-class FailedMatch.new(result') {
+class SuccessfulMatch.new(result', bindings') {
+    inherits successfulMatch(result', bindings')
+}
+
+class failedMatch(result') {
     inherits false
     method result { result' }
     method bindings { emptySequence }
     method asString {
-        "FailedMatch(result = {result})"
+        "failedMatch(result = {result})"
     }
 }
 
+class FailedMatch.new(result') {
+    inherits failedMatch(result')
+}
+
 method abstract {
-    SubobjectResponsibility.raise "abstract method not overriden by subobject"
+    SubobjectResponsibility.raise "abstract method not overriden by subobject."
+}
+
+method required {
+    SubobjectResponsibility.raise "required method not provided."
 }
 
 method do(action)while(condition) {
@@ -59,16 +71,21 @@ method max(a, b) {
     if (a > b) then { a } else { b }
 }
 
-class BasicPattern.new {
+class basicPattern {
     method &(o) {
-        AndPattern.new(self, o)
+        andPattern(self, o)
     }
     method |(o) {
-        OrPattern.new(self, o)
+        orPattern(self, o)
     }
 }
-class MatchAndDestructuringPattern.new(pat, items') {
-    inherits BasicPattern.new
+
+class BasicPattern.new {
+    inherits basicPattern
+}
+
+class matchAndDestructuringPattern(pat, items') {
+    inherits basicPattern
     def pattern = pat
     def items = items'
     method match(o) {
@@ -80,50 +97,73 @@ class MatchAndDestructuringPattern.new(pat, items') {
                 if (Extractable.match(o)) then {
                     mbindings := o.extract
                 } else {
-                    return FailedMatch.new(o)
+                    return failedMatch(o)
                 }
             }
+            print "match&Destructure start"
             for (items) and (mbindings) do { each, bind ->
                 def b = each.match(bind)
                 if (!b) then {
-                    return FailedMatch.new(o)
+                    print "match&Destructure fail"
+                    return failedMatch(o)
                 }
                 bindings.addAll(b.bindings)
             }
-            SuccessfulMatch.new(o, bindings)
+            print "match&Destructure success"
+            successfulMatch(o, bindings)
         } else {
-            FailedMatch.new(o)
+            failedMatch(o)
         }
+    }
+}
+
+class MatchAndDestructuringPattern.new(pat, items') {
+    inherits matchAndDestructuringPattern(pat, items')
+}
+
+class variablePattern(nm) {
+    inherits basicPattern
+    method match(o) {
+        successfulMatch(o, [o])
     }
 }
 
 class VariablePattern.new(nm) {
-    inherits BasicPattern.new
-    method match(o) {
-        SuccessfulMatch.new(o, [o])
-    }
+    inherits variablePattern(nm)
 }
 
-class BindingPattern.new(pat) {
-    inherits BasicPattern.new
+class bindingPattern(pat) {
+    inherits basicPattern
     method match(o) {
+        def bindings = [o]
         def m = pat.match(o)
         if (!m) then {
             return m
         }
-        SuccessfulMatch.new(o, [o] ++ m.bindings)
+        for (m.bindings) do {b->
+            bindings.push(b)
+        }
+        successfulMatch(o, bindings)
+    }
+}
+
+class BindingPattern.new(pat) {
+    inherits bindingPattern(pat)
+}
+
+class wildcardPattern {
+    inherits basicPattern
+    method match(o) {
+        successfulMatch(o, [])
     }
 }
 
 class WildcardPattern.new {
-    inherits BasicPattern.new
-    method match(o) {
-        SuccessfulMatch.new(done, [])
-    }
+    inherits wildcardPattern
 }
 
-class AndPattern.new(p1, p2) {
-    inherits BasicPattern.new
+class andPattern(p1, p2) {
+    inherits basicPattern
     method match(o) {
         def m1 = p1.match(o)
         if (!m1) then {
@@ -133,31 +173,47 @@ class AndPattern.new(p1, p2) {
         if (!m2) then {
             return m2
         }
-        SuccessfulMatch.new(o, m1.bindings ++ m2.bindings)
+        def bindings = []
+
+        for (m1.bindings) do {b->
+            bindings.push(b)
+        }
+        for (m2.bindings) do {b->
+            bindings.push(b)
+        }
+        successfulMatch(o, bindings)
+    }
+}
+
+class AndPattern.new(p1, p2) {
+    inherits andPattern(p1, p2)
+}
+
+class orPattern(p1, p2) {
+    inherits basicPattern
+    method match(o) {
+        if (p1.match(o)) then {
+            return successfulMatch(o, [])
+        }
+        if (p2.match(o)) then {
+            return successfulMatch(o, [])
+        }
+        failedMatch(o)
     }
 }
 
 class OrPattern.new(p1, p2) {
-    inherits BasicPattern.new
-    method match(o) {
-        if (p1.match(o)) then {
-            return SuccessfulMatch.new(o, [])
-        }
-        if (p2.match(o)) then {
-            return SuccessfulMatch.new(o, [])
-        }
-        FailedMatch.new(o)
-    }
+    inherits orPattern(p1, p2)
 }
 
 def Singleton is public = object {
     factory method new {
-        inherits BasicPattern.new
+        inherits basicPattern
         method match(other) {
             if (self == other) then {
-                SuccessfulMatch.new(other, [])
+                successfulMatch(other, [])
             } else {
-                FailedMatch.new(other)
+                failedMatch(other)
             }
         }
     }
@@ -167,18 +223,20 @@ def Singleton is public = object {
     }
 }
 
-class BaseType.new(name) {
+class baseType(n) {
+    var name is public := n
+
     method &(o) {
-        TypeIntersection.new(self, o)
+        typeIntersection(self, o)
     }
     method |(o) {
-        TypeVariant.new(self, o)
+        typeVariant(self, o)
     }
     method +(o) {
-        TypeUnion.new(self, o)
+        typeUnion(self, o)
     }
     method -(o) {
-        TypeSubtraction.new(self, o)
+        typeSubtraction(self, o)
     }
     method asString {
         if (name == "") then { "type ‹anon›" }
@@ -186,104 +244,136 @@ class BaseType.new(name) {
     }
 }
 
-class TypeIntersection.new(t1, t2) {
-    inherits AndPattern.new(t1, t2)
-    // inherits BaseType.new
+class BaseType.new(n) {
+    inherits baseType(n)
+}
+
+class typeIntersection(t1, t2) {
+    inherits andPattern(t1, t2)
+    // uses baseType
+    
+    var name is public := "({t1} & {t2})"
+
     method &(o) {
-        TypeIntersection.new(self, o)
+        typeIntersection(self, o)
     }
     method |(o) {
-        TypeVariant.new(self, o)
+        typeVariant(self, o)
     }
     method +(o) {
-        TypeUnion.new(self, o)
+        typeUnion(self, o)
     }
     method -(o) {
-        TypeSubtraction.new(self, o)
+        typeSubtraction(self, o)
     }
     method methodNames {
         t1.methodNames.addAll(t2.methodNames)
     }
-    method asString { "({t1} & {t2})" }
+    method asString { name }
 }
 
-class TypeVariant.new(t1, t2) {
-    inherits OrPattern.new(t1, t2)
-    // inherits BaseType.new
+class TypeIntersection.new(t1, t2) {
+    inherits typeIntersection(t1, t2)
+}
+
+class typeVariant(t1, t2) {
+    inherits orPattern(t1, t2)
+    // uses baseType
+    
+    var name is public := "({t1} | {t2})"
+
     method &(o) {
-        TypeIntersection.new(self, o)
+        typeIntersection(self, o)
     }
     method |(o) {
-        TypeVariant.new(self, o)
+        typeVariant(self, o)
     }
     method +(o) {
-        TypeUnion.new(self, o)
+        typeUnion(self, o)
     }
     method -(o) {
-        TypeSubtraction.new(self, o)
+        typeSubtraction(self, o)
     }
     method methodNames {
         self.TypeVariantsCannotBeCharacterizedByASetOfMethods
     }
-    method asString { "({t1} | {t2})" }
+    method asString { name }
 }
 
-class TypeUnion.new(t1, t2) {
-    inherits BasicPattern.new(t1, t2)
-//    inherits BaseType.new
+class TypeVariant.new(t1, t2) {
+    inherits typeVariant(t1, t2)
+}
+
+class typeUnion(t1, t2) {
+    inherits basicPattern
+//    uses baseType
+
+    var name is public := "({t1} + {t2})"
+
     method &(o) {
-        TypeIntersection.new(self, o)
+        typeIntersection(self, o)
     }
     method |(o) {
-        TypeVariant.new(self, o)
+        typeVariant(self, o)
     }
     method +(o) {
-        TypeUnion.new(self, o)
+        typeUnion(self, o)
     }
     method -(o) {
-        TypeSubtraction.new(self, o)
+        typeSubtraction(self, o)
     }
     method methodNames {
         t1.methodNames ** t2.methodNames
     }
     method match(o) {
-        ResourceException.raise "matching against a TypeUnion not yet implemented"
+        ResourceException.raise "matching against a typeUnion not yet implemented"
         // Why not?  Becuase it requires reflection, which
         // requires the mirror module, which requires this module.
         def mirror = ...
         def oMethodNames = mirror.reflect(o).methodNames
         for (self.methodNames) do { each ->
             if (! oMethodNames.contains(each)) then {
-                return FailedMatch.new(o)
+                return failedMatch(o)
             }
         }
-        return SuccessfulMatch.new(o, [])
+        return successfulMatch(o, [])
     }
-    method asString { "({t1} + {t2})" }
+    method asString { name }
 }
 
-class TypeSubtraction.new(t1, t2) {
-    inherits BasicPattern.new(t1, t2)
+class TypeUnion.new(t1, t2) {
+    inherits typeUnion(t1, t2)
+}
+
+class typeSubtraction(t1, t2) {
+    inherits basicPattern
+
+    var name is public := "({t1} - {t2})"
+
     method &(o) {
-        TypeIntersection.new(self, o)
+        typeIntersection(self, o)
     }
     method |(o) {
-        TypeVariant.new(self, o)
+        typeVariant(self, o)
     }
     method +(o) {
-        TypeUnion.new(self, o)
+        typeUnion(self, o)
     }
     method -(o) {
-        TypeSubtraction.new(self, o)
+        typeSubtraction(self, o)
     }
     method methodNames {
         t1.methodNames.removeAll(t2.methodNames)
     }
-    method asString { "({t1} - {t2})" }
+    method asString { name }
 }
 
-// Now define the types.  Because some of the types are defined using &,
-// TypeIntersection must be defined first.
+class TypeSubtraction.new(t1, t2) {
+    inherits typeSubtraction(t1, t2)
+}
+
+// Now define the types.  Because some of the types are defined
+// using &, typeIntersection must be defined first.
 
 type Extractable = {
     extract
