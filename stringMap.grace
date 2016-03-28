@@ -15,8 +15,10 @@ def unused = object {
 class new {
     var elems := 0
     var inner := PrimitiveArray.new(4)
-    for (0..(inner.size-1)) do {i->
-        inner.at(i)put(unused)
+    var inix := 0
+    while { inix < inner.size } do {
+        inner.at (inix) put (unused)
+        inix := inix + 1
     }
     native "js" code ‹this.data.inner = { };›  
         // override the PrimitiveArray with an empty object
@@ -202,15 +204,19 @@ class new {
         def n = c * 2
         def oldInner = inner
         inner := PrimitiveArray.new(n)
-        for (0..(inner.size-1)) do {i->
+        var i := 0
+        while { i < inner.size } do {
             inner.at(i)put(unused)
+            i := i + 1
         }
         elems := 0
-        for (0..(oldInner.size-1)) do {i->
+        i := 0
+        while { i < oldInner.size } do {
             def a = oldInner.at(i)
             if (a != unused) then {
                 put(a.key, a.value)
             }
+            i := i + 1
         }
     }
     method asList {
