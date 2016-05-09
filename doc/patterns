@@ -1,0 +1,105 @@
+# Revising the Patterns Protocol
+
+The current patterns protocol (described in the [DSL '12 Paper](http://dx.doi.org/10.1145/2480360.2384581))
+suffers from some practical deficiencies, chiefly:
+
+1. it is inherently inefficient, since each pattern match requires creating a
+    new object indicating success or failure, and
+
+2. it subverts the language syntax, since what is syntactically a pattern request
+   is used to introduce new variables.  In other words, the arguments to a pattern 
+   must be fresh identifiers that become _bound_ as a consequence of their
+   being used as arguments.
+
+(1) Contributes to dynamic type checks being extremely slow; (2) requires that
+pattern matches must be re-written into standard Grace inside the compiler.
+This requires a special pass over the syntax tree, which is time-consuming, but
+more importantly, the details of the re-writing must be specified, which has
+not happened.
+
+For all of these reasons, the current specification simplifies the protocol, but
+at the cost of removing nested matches and so-called "destructuring matches".  This
+document proposes a new protocol that restores these features, but does not suffer
+from the problems (1) and (2) above.
+
+## New Matching Types
+
+    type Pattern = type {
+        match (subject:Object) -> MatchResult
+        & (other:Pattern) -> Pattern
+        | (other:Pattern) -> Pattern
+        &=> (next:Block) -> Pattern     // the andThen combinator
+    }
+
+    type MatchResult = Boolean & type {
+        hasResults -> Boolean
+        results -> Iterable ⟦Unknown⟧
+    }
+    
+These are very similar to the current interfaces, but with improved efficiency.  In the old scheme, all patterns have a result, which is usually the same as the subject.  (It is different when blocks are treated as patterns.)  In this revised scheme, most patterns have no results.  A pattern that fails to match can answer the singleton object `failedMatch`
+
+    def failedMatch = object {
+        inherits false
+        method hasResults { false }
+        method results { MatchError.raise "failedMatch has no results" }
+    } 
+
+A successful match that has no results can answer the singleton object `successfulMatch`:
+
+    def successfulMatch = object {
+        inherits true
+        method hasResults { false }
+        method results { MatchError.raise "successfulMatch has no results" }
+    }
+
+Only those Patterns that perform destructuring have results; these patterns, but _only_ these patterns, need create new `MatchResult` objects that have results.
+
+## Matching Blocks
+
+A cornerstone of the DLS'12 Patterns proposal was that it became possible to treat blocks as being partial rather than total functions.  This feature is retained, but the protocol for applying a partial function is extended:
+
+    type Block1⟦T,U⟧ = type {
+        apply(a:T) -> U
+        matches(a:T) -> MatchResult
+        executeWithArgs(args:Iterable ⟦Unknown⟧) -> U
+        execute(a:T) -> U
+        match(a:T) -> MatchResult
+    }
+    
+The methods `apply` and `match` are essentially unchanged, with `match` being forced to create a new `MatchResult` object to contain its results.  However, the `match(_)case(_)...` method no longer uses `match`.  Instead it requests
+
+    caseBlock.matches(subject)
+
+This request answers `failedMatch` or `successfulMatch` in the common cases of the block's pattern not performing destructuring, and a custom `MatchResult` object in the case of a successful match that wants to perform destructuring.  However, _in no case has the body of the block yet been executed_.  
+
+If the answer is `failedMatch`, then `match(_)case(_)...` moves on to the next case branch. If the answer is `successfulMatch`, execution is accomplished by 
+`match(_)case(_)...` requesting `caseBlock.execute(target)`.
+
+Note that, under the previous design, blocks were also patterns: when asked to `match` (rather than `apply` themselves), they answered a successful match that wrapped their real result.  Under the current proposal, blocks are no longer used as patterns: once it has been determined that `caseBlock.matches(subject)`, the `caseBlock` is just `execute`d, and its normal result is returned, with no necessity to wrap it.
+
+If `matches` did perform destructuring, then it will have answered a custom `MatchResult` object `mr`:
+
+    def mr = caseBlock.matches(subject)
+    assert(mr)
+    assert(mr.hasResults)
+    assert(mr.results) hasType (Iterable)
+    
+What happens to this result?  Nothing at all, unless the programmer chooses to use it, by using a _nested pattern_.  (Strictly, this object becomes the initial value of the caseBlock, so if the caseBlock is empty, it will be the result of the caseBlock.)
+
+##Nested Patterns
+
+Here is an example that uses nested patterns.  It is based on a use-case in the _whileLiteral_ dialect, the only place in the _minigrace_ source repository that seems to use a destructuring pattern.
+
+    match(nd:AstNode) 
+        case { w:WhileNode &=> { cond:ExprNode, _ -> 
+            if (cond.isBlock.not } then { reportBadWhile(w) }
+        } case { _ -> }
+
+The intention is that `WhileNode` is a pattern that matches requests of `while(_)do(_)`.  The result of `WhileNode.matches(nd)` will be a `MatchResult` object `smr` that behaves like `true` and for which `smr.hasResults` is true. `smr.results` is an Iterable with two elements that "destructure" the while node; these objects are the condition and the body from the while loop represented by `nd`.
+
+The `&=>` operator (pronounced "and then") takes the `mr.results` iterable from the
+pattern to its left, and "pipes" it into the block on its right.  This block is then  executed (exactly like a case block, to allow nesting of patterns to arbitrary depth.)  The result of the block is then wrapped in a custom SuccessfulMatch object, because the whole `‹pattern› &=> ‹nestedBlock›` construct needs to behave as a pattern.
+
+This custom SuccessfulMatch object will be the initial value of the (empty) caseBlock.
+
+
