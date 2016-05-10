@@ -529,6 +529,18 @@ int integerfromAny(Object p) {
     int i = atoi(c);
     return i;
 }
+long longIntegerFromAny(Object p) {
+    if (p->class == Number) {
+        double *d = (double*)p->data;
+        int j = *d;
+        return j;
+    }
+    p = callmethod(p, "asString", 0, NULL, NULL);
+    char *c = grcstring(p);
+    int i = atol(c);
+    return i;
+}
+
 
 Object _rangeClass = NULL;
 Object grace_rangeClass() {
@@ -3203,6 +3215,179 @@ Object File_writeBinary(Object self, int nparts, int *argcv,
     int pos = fwrite(octo->body, sizeof(char), size, file);
     return alloc_Float64(pos);
 }
+
+Object File_readU8(Object self, int nparts, int *argcv, Object* argv,
+    int flags) {
+    struct FileObject *s = (struct FileObject*)self;
+    FILE *file = s->file;
+    unsigned char c;
+    fread(&c, sizeof(unsigned char), 1, file);
+    return alloc_Integer32(c);
+}
+Object File_readU16(Object self, int nparts, int *argcv, Object* argv,
+    int flags) {
+    struct FileObject *s = (struct FileObject*)self;
+    FILE *file = s->file;
+    unsigned short c;
+    fread(&c, sizeof(unsigned short), 1, file);
+    return alloc_Integer32(c);
+}
+Object File_readU32(Object self, int nparts, int *argcv, Object* argv,
+    int flags) {
+    struct FileObject *s = (struct FileObject*)self;
+    FILE *file = s->file;
+    unsigned int c;
+    fread(&c, sizeof(unsigned int), 1, file);
+    return alloc_Integer32(c);
+}
+Object File_readU64(Object self, int nparts, int *argcv, Object* argv,
+    int flags) {
+    struct FileObject *s = (struct FileObject*)self;
+    FILE *file = s->file;
+    unsigned long c;
+    fread(&c, sizeof(unsigned long), 1, file);
+    return alloc_Integer32(c);
+}
+Object File_readI8(Object self, int nparts, int *argcv, Object* argv,
+    int flags) {
+    struct FileObject *s = (struct FileObject*)self;
+    FILE *file = s->file;
+    char c;
+    fread(&c, sizeof(char), 1, file);
+    return alloc_Integer32(c);
+}
+Object File_readI16(Object self, int nparts, int *argcv, Object* argv,
+    int flags) {
+    struct FileObject *s = (struct FileObject*)self;
+    FILE *file = s->file;
+    short c;
+    fread(&c, sizeof(short), 1, file);
+    return alloc_Integer32(c);
+}
+Object File_readI32(Object self, int nparts, int *argcv, Object* argv,
+    int flags) {
+    struct FileObject *s = (struct FileObject*)self;
+    FILE *file = s->file;
+    int c;
+    fread(&c, sizeof(int), 1, file);
+    return alloc_Integer32(c);
+}
+Object File_readI64(Object self, int nparts, int *argcv, Object* argv,
+    int flags) {
+    struct FileObject *s = (struct FileObject*)self;
+    FILE *file = s->file;
+    long c;
+    fread(&c, sizeof(long), 1, file);
+    return alloc_Integer32(c);
+}
+Object File_readF32(Object self, int nparts, int *argcv, Object* argv,
+    int flags) {
+    struct FileObject *s = (struct FileObject*)self;
+    FILE *file = s->file;
+    float c;
+    fread(&c, sizeof(float), 1, file);
+    return alloc_Float64(c);
+}
+Object File_readF64(Object self, int nparts, int *argcv, Object* argv,
+    int flags) {
+    struct FileObject *s = (struct FileObject*)self;
+    FILE *file = s->file;
+    double c;
+    fread(&c, sizeof(double), 1, file);
+    return alloc_Float64(c);
+}
+
+Object File_writeU8(Object self, int nparts, int *argcv, Object* argv,
+    int flags) {
+    struct FileObject *s = (struct FileObject*)self;
+    FILE *file = s->file;
+    long val = longIntegerFromAny(argv[0]);
+    unsigned char c = val;
+    fwrite(&c, sizeof(unsigned char), 1, file);
+    return self;
+}
+Object File_writeU16(Object self, int nparts, int *argcv, Object* argv,
+    int flags) {
+    struct FileObject *s = (struct FileObject*)self;
+    FILE *file = s->file;
+    long val = longIntegerFromAny(argv[0]);
+    unsigned short c = val;
+    fwrite(&c, sizeof(unsigned short), 1, file);
+    return self;
+}
+Object File_writeU32(Object self, int nparts, int *argcv, Object* argv,
+    int flags) {
+    struct FileObject *s = (struct FileObject*)self;
+    FILE *file = s->file;
+    long val = longIntegerFromAny(argv[0]);
+    unsigned int c = val;
+    fwrite(&c, sizeof(unsigned int), 1, file);
+    return self;
+}
+Object File_writeU64(Object self, int nparts, int *argcv, Object* argv,
+    int flags) {
+    struct FileObject *s = (struct FileObject*)self;
+    FILE *file = s->file;
+    long val = longIntegerFromAny(argv[0]);
+    unsigned long c = val;
+    fwrite(&c, sizeof(unsigned long), 1, file);
+    return self;
+}
+Object File_writeI8(Object self, int nparts, int *argcv, Object* argv,
+    int flags) {
+    struct FileObject *s = (struct FileObject*)self;
+    FILE *file = s->file;
+    long val = longIntegerFromAny(argv[0]);
+    char c = val;
+    fwrite(&c, sizeof(char), 1, file);
+    return self;
+}
+Object File_writeI16(Object self, int nparts, int *argcv, Object* argv,
+    int flags) {
+    struct FileObject *s = (struct FileObject*)self;
+    FILE *file = s->file;
+    long val = longIntegerFromAny(argv[0]);
+    short c = val;
+    fwrite(&c, sizeof(short), 1, file);
+    return self;
+}
+Object File_writeI32(Object self, int nparts, int *argcv, Object* argv,
+    int flags) {
+    struct FileObject *s = (struct FileObject*)self;
+    FILE *file = s->file;
+    long val = longIntegerFromAny(argv[0]);
+    int c = val;
+    fwrite(&c, sizeof(int), 1, file);
+    return self;
+}
+Object File_writeI64(Object self, int nparts, int *argcv, Object* argv,
+    int flags) {
+    struct FileObject *s = (struct FileObject*)self;
+    FILE *file = s->file;
+    long val = longIntegerFromAny(argv[0]);
+    long c = val;
+    fwrite(&c, sizeof(long), 1, file);
+    return self;
+}
+Object File_writeF32(Object self, int nparts, int *argcv, Object* argv,
+    int flags) {
+    struct FileObject *s = (struct FileObject*)self;
+    FILE *file = s->file;
+    assertClass(argv[0], Number);
+    float c = *(double*)argv[0]->data;
+    fwrite(&c, sizeof(c), 1, file);
+    return self;
+}
+Object File_writeF64(Object self, int nparts, int *argcv, Object* argv,
+    int flags) {
+    struct FileObject *s = (struct FileObject*)self;
+    FILE *file = s->file;
+    assertClass(argv[0], Number);
+    double c = *(double*)argv[0]->data;
+    fwrite(&c, sizeof(c), 1, file);
+    return self;
+}
+
 Object File_seek(Object self, int nparts, int *argcv,
         Object *argv, int flags) {
     struct FileObject *s = (struct FileObject*)self;
@@ -3276,7 +3461,7 @@ Object File_asString(Object self, int nparts, int *argcv,
 
 Object alloc_File_from_stream(FILE *stream) {
     if (File == NULL) {
-        File = alloc_class("File", 21);
+        File = alloc_class("File", 41);
         add_Method(File, "read", &File_read);
         add_Method(File, "getline", &File_getline);
         add_Method(File, "write", &File_write);
@@ -3291,6 +3476,29 @@ Object alloc_File_from_stream(FILE *stream) {
         add_Method(File, "next", &File_next);
         add_Method(File, "readBinary", &File_readBinary);
         add_Method(File, "writeBinary", &File_writeBinary);
+
+        add_Method(File, "readU8", &File_readU8);
+        add_Method(File, "readU16", &File_readU16);
+        add_Method(File, "readU32", &File_readU32);
+        add_Method(File, "readU64", &File_readU64);
+        add_Method(File, "readI8", &File_readI8);
+        add_Method(File, "readI16", &File_readI16);
+        add_Method(File, "readI32", &File_readI32);
+        add_Method(File, "readI64", &File_readI64);
+        add_Method(File, "readF32", &File_readF32);
+        add_Method(File, "readF64", &File_readF64);
+
+        add_Method(File, "writeU8", &File_writeU8);
+        add_Method(File, "writeU16", &File_writeU16);
+        add_Method(File, "writeU32", &File_writeU32);
+        add_Method(File, "writeU64", &File_writeU64);
+        add_Method(File, "writeI8", &File_writeI8);
+        add_Method(File, "writeI16", &File_writeI16);
+        add_Method(File, "writeI32", &File_writeI32);
+        add_Method(File, "writeI64", &File_writeI64);
+        add_Method(File, "writeF32", &File_writeF32);
+        add_Method(File, "writeF64", &File_writeF64);
+
         add_Method(File, "pathname", &File_pathname);
         add_Method(File, "eof", &File_eof);
         add_Method(File, "isatty", &File_isatty);

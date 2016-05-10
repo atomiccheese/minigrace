@@ -119,6 +119,30 @@ factory method open (fileName:String, mode:String) -> FileStream {
     method next -> Object { }
     method readBinary -> Object { }
     method writeBinary -> Object { }
+
+    // Read and write big-endian numbers
+    method readU8 -> Number { }
+    method readU16 -> Number { }
+    method readU32 -> Number { }
+    method readU64 -> Number { }
+    method readI8 -> Number { }
+    method readI16 -> Number { }
+    method readI32 -> Number { }
+    method readI64 -> Number { }
+    method readF32 -> Number { }
+    method readF64 -> Number { }
+
+    method writeU8 (n : Number) -> Object { }
+    method writeU16 (n : Number) -> Object { }
+    method writeU32 (n : Number) -> Object { }
+    method writeU64 (n : Number) -> Object { }
+    method writeI8 (n : Number) -> Object { }
+    method writeI16 (n : Number) -> Object { }
+    method writeI32 (n : Number) -> Object { }
+    method writeI64 (n : Number) -> Object { }
+    method writeF32 (n : Number) -> Object { }
+    method writeF64 (n : Number) -> Object { }
+
     method pathname -> String { }
     method eof -> Boolean { }
     method isatty -> Boolean { }
