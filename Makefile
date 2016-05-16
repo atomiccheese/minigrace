@@ -39,7 +39,7 @@ KG=known-good/$(ARCH)/$(STABLE)
 OBJECTDRAW = objectdraw.grace rtobjectdraw.grace stobjectdraw.grace animation.grace
 OBJECTDRAW_REAL = $(filter-out %tobjectdraw.grace, $(OBJECTDRAW))
 PRELUDESOURCEFILES = collectionsPrelude.grace StandardPrelude.grace
-REALSOURCEFILES = $(sort compiler.grace errormessages.grace util.grace ast.grace identifierKinds.grace lexer.grace parser.grace genjs.grace genc.grace stringMap.grace xmodule.grace identifierresolution.grace)
+REALSOURCEFILES = $(sort compiler.grace errormessages.grace util.grace ast.grace identifierKinds.grace lexer.grace parser.grace genjs.grace genc.grace stringMap.grace xmodule.grace identifierresolution.grace jvm.grace genjvm.grace)
 SOURCEFILES = $(MGSOURCEFILES) $(PRELUDESOURCEFILES)
 STABLE=cd3e574fdd2e41661ad9235356bfb71684d9b9bc
 STUB_GCTS = $(STUBS:%.grace=stubs/%.gct)

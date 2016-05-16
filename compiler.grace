@@ -2,6 +2,7 @@ import "ast" as ast
 import "buildinfo" as buildinfo
 import "genc" as genc
 import "genjs" as genjs
+import "genjvm" as genjvm
 import "identifierresolution" as identifierresolution
 import "io" as io
 import "lexer" as lexer
@@ -94,6 +95,10 @@ match(util.target)
     }
     case { "js" ->
         genjs.compile(moduleObject, util.outfile, util.runmode,
+            util.buildtype, util.gracelibPath)
+    }
+    case { "jvm" ->
+        genjvm.compile(moduleObject, util.outfile, util.runmode,
             util.buildtype, util.gracelibPath)
     }
     case { _ ->
