@@ -3216,6 +3216,36 @@ Object File_writeBinary(Object self, int nparts, int *argcv,
     return alloc_Float64(pos);
 }
 
+void swap16(void* x) {
+    unsigned short v = *(unsigned short*)x;
+    v = ((v >> 8) & 0x00ff) | ((v << 8) & 0xff00);
+    *(unsigned short*)x = v;
+}
+void swap32(void* x) {
+    unsigned int v = *(unsigned int*)x;
+    unsigned char* bytes = (unsigned char*)x;
+    unsigned char* vbytes = (unsigned char*)&v;
+
+    bytes[0] = vbytes[3];
+    bytes[1] = vbytes[2];
+    bytes[2] = vbytes[1];
+    bytes[3] = vbytes[0];
+}
+void swap64(void* x) {
+    unsigned long v = *(unsigned long*)x;
+    unsigned char* bytes = (unsigned char*)x;
+    unsigned char* vbytes = (unsigned char*)&v;
+
+    bytes[0] = vbytes[7];
+    bytes[1] = vbytes[6];
+    bytes[2] = vbytes[5];
+    bytes[3] = vbytes[4];
+    bytes[4] = vbytes[3];
+    bytes[5] = vbytes[2];
+    bytes[6] = vbytes[1];
+    bytes[7] = vbytes[0];
+}
+
 Object File_readU8(Object self, int nparts, int *argcv, Object* argv,
     int flags) {
     struct FileObject *s = (struct FileObject*)self;
@@ -3230,6 +3260,7 @@ Object File_readU16(Object self, int nparts, int *argcv, Object* argv,
     FILE *file = s->file;
     unsigned short c;
     fread(&c, sizeof(unsigned short), 1, file);
+    swap16(&c);
     return alloc_Integer32(c);
 }
 Object File_readU32(Object self, int nparts, int *argcv, Object* argv,
@@ -3238,6 +3269,7 @@ Object File_readU32(Object self, int nparts, int *argcv, Object* argv,
     FILE *file = s->file;
     unsigned int c;
     fread(&c, sizeof(unsigned int), 1, file);
+    swap32(&c);
     return alloc_Integer32(c);
 }
 Object File_readU64(Object self, int nparts, int *argcv, Object* argv,
@@ -3246,6 +3278,7 @@ Object File_readU64(Object self, int nparts, int *argcv, Object* argv,
     FILE *file = s->file;
     unsigned long c;
     fread(&c, sizeof(unsigned long), 1, file);
+    swap64(&c);
     return alloc_Integer32(c);
 }
 Object File_readI8(Object self, int nparts, int *argcv, Object* argv,
@@ -3262,6 +3295,7 @@ Object File_readI16(Object self, int nparts, int *argcv, Object* argv,
     FILE *file = s->file;
     short c;
     fread(&c, sizeof(short), 1, file);
+    swap16((char*)&c);
     return alloc_Integer32(c);
 }
 Object File_readI32(Object self, int nparts, int *argcv, Object* argv,
@@ -3270,6 +3304,7 @@ Object File_readI32(Object self, int nparts, int *argcv, Object* argv,
     FILE *file = s->file;
     int c;
     fread(&c, sizeof(int), 1, file);
+    swap32(&c);
     return alloc_Integer32(c);
 }
 Object File_readI64(Object self, int nparts, int *argcv, Object* argv,
@@ -3278,6 +3313,7 @@ Object File_readI64(Object self, int nparts, int *argcv, Object* argv,
     FILE *file = s->file;
     long c;
     fread(&c, sizeof(long), 1, file);
+    swap64(&c);
     return alloc_Integer32(c);
 }
 Object File_readF32(Object self, int nparts, int *argcv, Object* argv,
@@ -3286,6 +3322,7 @@ Object File_readF32(Object self, int nparts, int *argcv, Object* argv,
     FILE *file = s->file;
     float c;
     fread(&c, sizeof(float), 1, file);
+    swap32(&c);
     return alloc_Float64(c);
 }
 Object File_readF64(Object self, int nparts, int *argcv, Object* argv,
@@ -3294,6 +3331,7 @@ Object File_readF64(Object self, int nparts, int *argcv, Object* argv,
     FILE *file = s->file;
     double c;
     fread(&c, sizeof(double), 1, file);
+    swap64(&c);
     return alloc_Float64(c);
 }
 
@@ -3312,6 +3350,7 @@ Object File_writeU16(Object self, int nparts, int *argcv, Object* argv,
     FILE *file = s->file;
     long val = longIntegerFromAny(argv[0]);
     unsigned short c = val;
+    swap16(&c);
     fwrite(&c, sizeof(unsigned short), 1, file);
     return self;
 }
@@ -3321,6 +3360,7 @@ Object File_writeU32(Object self, int nparts, int *argcv, Object* argv,
     FILE *file = s->file;
     long val = longIntegerFromAny(argv[0]);
     unsigned int c = val;
+    swap32(&c);
     fwrite(&c, sizeof(unsigned int), 1, file);
     return self;
 }
@@ -3330,6 +3370,7 @@ Object File_writeU64(Object self, int nparts, int *argcv, Object* argv,
     FILE *file = s->file;
     long val = longIntegerFromAny(argv[0]);
     unsigned long c = val;
+    swap64(&c);
     fwrite(&c, sizeof(unsigned long), 1, file);
     return self;
 }
@@ -3348,6 +3389,7 @@ Object File_writeI16(Object self, int nparts, int *argcv, Object* argv,
     FILE *file = s->file;
     long val = longIntegerFromAny(argv[0]);
     short c = val;
+    swap16(&c);
     fwrite(&c, sizeof(short), 1, file);
     return self;
 }
@@ -3357,6 +3399,7 @@ Object File_writeI32(Object self, int nparts, int *argcv, Object* argv,
     FILE *file = s->file;
     long val = longIntegerFromAny(argv[0]);
     int c = val;
+    swap32(&c);
     fwrite(&c, sizeof(int), 1, file);
     return self;
 }
@@ -3366,6 +3409,7 @@ Object File_writeI64(Object self, int nparts, int *argcv, Object* argv,
     FILE *file = s->file;
     long val = longIntegerFromAny(argv[0]);
     long c = val;
+    swap64(&c);
     fwrite(&c, sizeof(long), 1, file);
     return self;
 }
@@ -3375,6 +3419,7 @@ Object File_writeF32(Object self, int nparts, int *argcv, Object* argv,
     FILE *file = s->file;
     assertClass(argv[0], Number);
     float c = *(double*)argv[0]->data;
+    swap32(&c);
     fwrite(&c, sizeof(c), 1, file);
     return self;
 }
@@ -3384,6 +3429,7 @@ Object File_writeF64(Object self, int nparts, int *argcv, Object* argv,
     FILE *file = s->file;
     assertClass(argv[0], Number);
     double c = *(double*)argv[0]->data;
+    swap64(&c);
     fwrite(&c, sizeof(c), 1, file);
     return self;
 }
