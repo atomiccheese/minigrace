@@ -19,6 +19,9 @@ objectdraw.grace
 rtobjectdraw.grace
 animation.grace
 js/.DS_Store
+js/genjvm.js
+js/jvm.js
+js/jvmops.js
 js/StandardPrelude.js
 js/animation.js
 js/ast.js
@@ -87,3 +90,4 @@ grace-web-editor/
 *.xcworkspace
 *.xcworkspace/*
 .gitignore~
+buildinfo_tmp.grace.*
