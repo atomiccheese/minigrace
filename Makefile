@@ -13,6 +13,9 @@ STATIC_STUBS := $(filter-out $(DYNAMIC_STUBS) $(INTERNAL_STUBS) $(JS_STUBS), $(S
 EXTERNAL_STUBS := $(filter-out $(INTERNAL_STUBS) $(JS_STUBS), $(STUBS))
 CFILES = ast.c buildinfo.c genc.c genjs.c lexer.c parser.c util.c stringMap.c xmodule.c identifierresolution.c  errormessages.c
 
+# List of classes included in the JVM runtime library
+GRACELIB_JVM_CLASSES=GraceLibrary
+
 # The next 2 rules are here for their side effects: updating
 # buildinfo.grace if necessary, and creating the l1 directory
 CHECK_BUILDINFO := $(shell tools/check-buildinfo $(PREFIX) $(INCLUDE_PATH) $(MODULE_PATH) $(OBJECT_PATH))
@@ -188,6 +191,9 @@ gracelib-basic.o: gracelib.c gracelib.h
 gracelib.o: gracelib-basic.o debugger.o StandardPrelude.gcn collectionsPrelude.gcn
 	ld -o gracelib.o -r gracelib-basic.o StandardPrelude.gcn collectionsPrelude.gcn debugger.o
 
+gracelib.jar: $(GRACELIB_JVM_CLASSES:%=gracelib-jvm/%.class)
+	jar cf $@ $^
+
 install: minigrace $(COMPILER_MODULES:%.grace=js/%.js) $(COMPILER_MODULES:%.grace=%.gct) $(STUB_GCTS) $(STUBS:%.grace=js/%.gct) js/grace $(LIBRARY_MODULES:%.grace=modules/%.gct)  $(LIBRARY_MODULES:%.grace=js/%.js) $(LIBRARY_WO_OBJECTDRAW:%.grace=modules/%.gcn) $(LIBRARY_WO_OBJECTDRAW:%.grace=modules/%.gso) gracelib.o
 	install -d $(PREFIX)/bin $(MODULE_PATH) $(OBJECT_PATH) $(INCLUDE_PATH)
 	install -m 755 minigrace $(PREFIX)/bin/minigrace
@@ -331,11 +337,13 @@ minigrace-dynamic: l1/minigrace $(SOURCEFILES)
 minigrace: l1/minigrace $(STUBS:%.grace=%.gct) $(SOURCEFILES) $(C_MODULES_GSO) gracelib.o l1/mirrors.gct l1/unicode.gct l1/unixFilePath.gct
 	GRACE_MODULE_PATH=l1 l1/minigrace --make --native --module minigrace $(VERBOSITY) --gracelib . compiler.grace
 
-minigrace-environment: minigrace-c-env minigrace-js-env
+minigrace-environment: minigrace-c-env minigrace-js-env minigrace-jvm-env
 
 minigrace-c-env: minigrace StandardPrelude.gct gracelib.o modules/gUnit.gct modules/gUnit.gcn modules/mirrors.gso modules/mirrors.gct modules/unicode.gso modules/gUnit.gct modules/gUnit.gso modules/unicode.gct .git/hooks/commit-msg
 
 minigrace-js-env: minigrace js/grace js/grace-debug StandardPrelude.gct js/gracelib.js .git/hooks/commit-msg $(PRELUDESOURCEFILES:%.grace=js/%.js) $(LIBRARY_MODULES:%.grace=js/%.js) js/ast.js js/errormessages.js dom.gct $(JSSOURCEFILES) $(TYPE_DIALECTS:%=modules/%.gso) $(TYPE_DIALECTS:%=js/%.js)
+
+minigrace-jvm-env: minigrace gracelib.jar
 
 module-test-js: minigrace-js-env $(TYPE_DIALECTS:%=js/%.js) $(TYPE_DIALECTS:%=modules/%.gso)
 	modules/tests/harness_js minigrace
@@ -509,6 +517,9 @@ uninstall:
 
 %.o: %.c
 	gcc -g -std=c99 -c -o $@ $<
+
+%.class: %.java
+	javac $?
 
 ## GENERATED WITH: for i in stringMap errormessages buildinfo util ast; do ./tools/make-depend $i; done | sort -u | grep -v :$ | sed 's/gct/gso/g'
 # manually removed io.gso and sys.gso, which are built in!
