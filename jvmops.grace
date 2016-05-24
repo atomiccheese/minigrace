@@ -2,6 +2,7 @@ class opcode(name') encodedAs(num) {
     def name is readable = name'
     def code is readable = num
 
+    method size { 1 }
     method writeTo(file) { file.writeU8(code) }
 }
 
@@ -22,18 +23,74 @@ def fconst_1        = opcode("fconst_1")        encodedAs(0x0c)
 def fconst_2        = opcode("fconst_2")        encodedAs(0x0d)
 def dconst_0        = opcode("dconst_0")        encodedAs(0x0e)
 def dconst_1        = opcode("dconst_1")        encodedAs(0x0f)
-def bipush          = opcode("bipush")          encodedAs(0x10)
+
+class bipush(n) {
+    inherit opcode("bipush") encodedAs(0x10)
+
+    def value = n
+
+    method size { 2 }
+    method writeTo(file) {
+        file.writeU8(code)
+        file.writeI8(value)
+    }
+}
+
 def sipush          = opcode("sipush")          encodedAs(0x11)
 def ldc             = opcode("ldc")             encodedAs(0x12)
 def ldc_w           = opcode("ldc_w")           encodedAs(0x13)
 def ldc2_w          = opcode("ldc2_w")          encodedAs(0x14)
 
 // Loads
-def iload           = opcode("iload")           encodedAs(0x15)
+class iload(idx) {
+    inherit opcode("iload") encodedAs(0x15)
+
+    def index = idx
+
+    method size { 2 }
+    method writeTo(file) {
+        file.writeU8(code)
+        file.writeU8(index)
+    }
+}
 def lload           = opcode("lload")           encodedAs(0x16)
-def fload           = opcode("fload")           encodedAs(0x17)
-def dload           = opcode("dload")           encodedAs(0x18)
-def aload           = opcode("aload")           encodedAs(0x19)
+
+class fload(idx) {
+    inherit opcode("fload") encodedAs(0x17)
+
+    def index = idx
+
+    method size { 2 }
+    method writeTo(file) {
+        file.writeU8(code)
+        file.writeU8(index)
+    }
+}
+
+class dload(idx) {
+    inherit opcode("dload") encodedAs(0x18)
+
+    def index = idx
+
+    method size { 2 }
+    method writeTo(file) {
+        file.writeU8(code)
+        file.writeU8(index)
+    }
+}
+
+class aload(idx) {
+    inherit opcode("aload") encodedAs(0x19)
+
+    def index = idx
+
+    method size { 2 }
+    method writeTo(file) {
+        file.writeU8(code)
+        file.writeU8(index)
+    }
+}
+
 def iload_0         = opcode("iload_0")         encodedAs(0x1a)
 def iload_1         = opcode("iload_1")         encodedAs(0x1b)
 def iload_2         = opcode("iload_2")         encodedAs(0x1c)
@@ -64,11 +121,33 @@ def caload          = opcode("caload")          encodedAs(0x34)
 def saload          = opcode("saload")          encodedAs(0x35)
 
 // Stores
-def istore          = opcode("istore")          encodedAs(0x36)
+class istore(idx) {
+    inherit opcode("istore") encodedAs(0x36)
+
+    def index = idx
+
+    method size { 2 }
+    method writeTo(file) {
+        file.writeU8(code)
+        file.writeU8(index)
+    }
+}
 def lstore          = opcode("lstore")          encodedAs(0x37)
 def fstore          = opcode("fstore")          encodedAs(0x38)
 def dstore          = opcode("dstore")          encodedAs(0x39)
-def astore          = opcode("astore")          encodedAs(0x3a)
+
+class astore(idx) {
+    inherit opcode("astore") encodedAs(0x3a)
+    
+    def index = idx
+
+    method size { 2 }
+    method writeTo(file) {
+        file.writeU8(code)
+        file.writeU8(index)
+    }
+}
+
 def istore_0        = opcode("istore_0")        encodedAs(0x3b)
 def istore_1        = opcode("istore_1")        encodedAs(0x3c)
 def istore_2        = opcode("istore_2")        encodedAs(0x3d)
@@ -146,7 +225,19 @@ def ior             = opcode("ior")             encodedAs(0x80)
 def lor             = opcode("lor")             encodedAs(0x81)
 def ixor            = opcode("ixor")            encodedAs(0x82)
 def lxor            = opcode("lxor")            encodedAs(0x83)
-def iinc            = opcode("iinc")            encodedAs(0x84)
+class iinc(idx, val) {
+    inherit opcode("iinc") encodedAs(0x84)
+
+    def index = idx
+    def value = val
+
+    method size { 3 }
+    method writeTo(file) {
+        file.writeU8(code)
+        file.writeU8(index)
+        file.writeI8(value)
+    }
+}
 
 // Conversions
 def i2l             = opcode("i2l")             encodedAs(0x85)
@@ -171,24 +262,85 @@ def fcmpl           = opcode("fcmpl")           encodedAs(0x95)
 def fcmpg           = opcode("fcmpg")           encodedAs(0x96)
 def dcmpl           = opcode("dcmpl")           encodedAs(0x97)
 def dcmpg           = opcode("dcmpg")           encodedAs(0x98)
-def ifeq            = opcode("ifeq")            encodedAs(0x99)
-def ifne            = opcode("ifne")            encodedAs(0x9a)
-def iflt            = opcode("iflt")            encodedAs(0x9b)
-def ifge            = opcode("ifge")            encodedAs(0x9c)
-def ifgt            = opcode("ifgt")            encodedAs(0x9d)
-def ifle            = opcode("ifle")            encodedAs(0x9e)
-def if_icmpeq       = opcode("if_icmpeq")       encodedAs(0x9f)
-def if_icmpne       = opcode("if_icmpne")       encodedAs(0xa0)
-def if_icmplt       = opcode("if_icmplt")       encodedAs(0xa1)
-def if_icmpge       = opcode("if_icmpge")       encodedAs(0xa2)
-def if_icmpgt       = opcode("if_icmpgt")       encodedAs(0xa3)
-def if_icmple       = opcode("if_icmple")       encodedAs(0xa4)
-def if_acmpeq       = opcode("if_acmpeq")       encodedAs(0xa5)
-def if_acmpne       = opcode("if_acmpne")       encodedAs(0xa6)
+
+class conditionalOpcode(name') encoding(enc) index(idx) {
+    inherit opcode(name') encodedAs(enc)
+
+    def index = idx
+
+    method size { 3 }
+    method writeTo(file) {
+        file.writeU8(code)
+        file.writeI16(index)
+    }
+}
+class ifeq(idx) {
+    inherit conditionalOpcode("ifeq") encoding(0x99) index(idx)
+}
+class ifne(idx) {
+    inherit conditionalOpcode("ifne") encoding(0x9a) index(idx)
+}
+class iflt(idx) {
+    inherit conditionalOpcode("iflt") encoding(0x9b) index(idx)
+}
+class ifge(idx) {
+    inherit conditionalOpcode("ifge") encoding(0x9c) index(idx)
+}
+class ifgt(idx) {
+    inherit conditionalOpcode("ifgt") encoding(0x9d) index(idx)
+}
+class ifle(idx) {
+    inherit conditionalOpcode("ifle") encoding(0x9e) index(idx)
+}
+class if_icmpeq(idx) {
+    inherit conditionalOpcode("if_icmpeq") encoding(0x9f) index(idx)
+}
+class if_icmpne(idx) {
+    inherit conditionalOpcode("if_icmpne") encoding(0xa0) index(idx)
+}
+class if_icmplt(idx) {
+    inherit conditionalOpcode("if_icmplt") encoding(0xa1) index(idx)
+}
+class if_icmpge(idx) {
+    inherit conditionalOpcode("if_icmpge") encoding(0xa2) index(idx)
+}
+class if_icmpgt(idx) {
+    inherit conditionalOpcode("if_icmpgt") encoding(0xa3) index(idx)
+}
+class if_icmple(idx) {
+    inherit conditionalOpcode("if_icmple") encoding(0xa4) index(idx)
+}
+class if_acmpeq(idx) {
+    inherit conditionalOpcode("if_acmpeq") encoding(0xa5) index(idx)
+}
+class if_acmpne(idx) {
+    inherit conditionalOpcode("if_acmpne") encoding(0xa6) index(idx)
+}
 
 // Control
-def goto            = opcode("goto")            encodedAs(0xa7)
-def jsr             = opcode("jsr")             encodedAs(0xa8)
+class goto(idx) {
+    inherit opcode("goto") encodedAs(0xa7)
+
+    def index = idx
+
+    method size { 3 }
+    method writeTo(file) {
+        file.writeU8(code)
+        file.writeI16(index)
+    }
+}
+
+class jsr(offs) {
+    inherit opcode("jsr") encodedAs(0xa8)
+
+    def offset = offs
+
+    method size { 3 }
+    method writeTo(file) {
+        file.writeU8(code)
+        file.writeI16(offset)
+    }
+}
 def ret             = opcode("ret")             encodedAs(0xa9)
 def tableswitch     = opcode("tableswitch")     encodedAs(0xaa)
 def lookupswitch    = opcode("lookupswitch")    encodedAs(0xab)
@@ -200,32 +352,157 @@ def areturn         = opcode("areturn")         encodedAs(0xb0)
 def return_         = opcode("return")          encodedAs(0xb1)
 
 // References
-def getstatic       = opcode("getstatic")       encodedAs(0xb2)
+class getstatic(idx) {
+    inherit opcode("getstatic") encodedAs(0xb2)
+
+    def index = idx
+
+    method size { 3 }
+    method writeTo(file) {
+        file.writeU8(code)
+        file.writeU16(index)
+    }
+}
+
 def putstatic       = opcode("putstatic")       encodedAs(0xb3)
-def getfield        = opcode("getfield")        encodedAs(0xb4)
+
+class getfield(idx) {
+    inherit opcode("getfield") encodedAs(0xb4)
+
+    def index = idx
+
+    method size { 3 }
+    method writeTo(file) {
+        file.writeU8(code)
+        file.writeU16(index)
+    }
+}
+
 def putfield        = opcode("putfield")        encodedAs(0xb5)
-def invokevirtual   = opcode("invokevirtual")   encodedAs(0xb6)
-def invokespecial   = opcode("invokespecial")   encodedAs(0xb7)
-def invokestatic    = opcode("invokestatic")    encodedAs(0xb8)
-def invokeinterface = opcode("invokeinterface") encodedAs(0xb9)
-def invokedynamic   = opcode("invokedynamic")   encodedAs(0xba)
+class invokevirtual(idx) {
+    inherit opcode("invokevirtual") encodedAs(0xb6)
+
+    def index = idx
+
+    method size { 3 }
+    method writeTo(file) {
+        file.writeU8(code)
+        file.writeU16(index)
+    }
+}
+class invokespecial(idx) {
+    inherit opcode("invokespecial") encodedAs(0xb7)
+
+    def index = idx
+
+    method size { 2 }
+    method writeTo(file) {
+        file.writeU8(code)
+        file.writeU16(index)
+    }
+}
+class invokestatic(idx) {
+    inherit opcode("invokestatic") encodedAs(0xb8)
+
+    def index = idx
+
+    method size { 2 }
+    method writeTo(file) {
+        file.writeU8(code)
+        file.writeU16(index)
+    }
+}
+class invokeinterface(idx, count') {
+    inherit opcode("invokeinterface") encodedAs(0xb9)
+
+    def index = idx
+    def count = count'
+
+    method size { 4 }
+    method writeTo(file) {
+        file.writeU8(code)
+        file.writeU16(index)
+        file.writeU8(count)
+        file.writeU8(0)
+    }
+}
+class invokedynamic(idx) {
+    inherit opcode("invokedynamic") encodedAs(0xba)
+
+    def index = idx
+
+    method size { 3 }
+    method writeTo(file) {
+        file.writeU8(code)
+        file.writeU16(index)
+        file.writeU16(0)
+    }
+}
 def new             = opcode("new")             encodedAs(0xbb)
 def newarray        = opcode("newarray")        encodedAs(0xbc)
-def anewarray       = opcode("anewarray")       encodedAs(0xbd)
+
+class anewarray(typeidx) {
+    inherit opcode("anewarray") encodedAs(0xbd)
+
+    def index = typeidx
+
+    method size { 3 }
+    method writeTo(file) {
+        file.writeU8(code)
+        file.writeU16(index)
+    }
+}
+
 def arraylength     = opcode("arraylength")     encodedAs(0xbe)
 def athrow          = opcode("athrow")          encodedAs(0xbf)
 def checkcast       = opcode("checkcast")       encodedAs(0xc0)
-def instanceof      = opcode("instanceof")      encodedAs(0xc1)
+class instanceof(idx) {
+    inherit opcode("instanceof") encodedAs(0xc1)
+
+    def index = idx
+
+    method size { 3 }
+    method writeTo(file) {
+        file.writeU8(code)
+        file.writeU16(index)
+    }
+}
 def monitorenter    = opcode("monitorenter")    encodedAs(0xc2)
 def monitorexit     = opcode("monitorexit")     encodedAs(0xc3)
 
 // Extended
 def wide            = opcode("wide")            encodedAs(0xc4)
 def multianewarray  = opcode("multianewarray")  encodedAs(0xc5)
-def ifnull          = opcode("ifnull")          encodedAs(0xc6)
-def ifnonnull       = opcode("ifnonnull")       encodedAs(0xc7)
-def goto_w          = opcode("goto_w")          encodedAs(0xc8)
-def jsr_w           = opcode("jsr_w")           encodedAs(0xc9)
+
+class ifnull(idx) {
+    inherit conditionalOpcode("ifnull") encoding(0xc6) index(idx)
+}
+class ifnonnull(idx) {
+    inherit conditionalOpcode("ifnonnull") encoding(0xc7) index(idx)
+}
+
+class goto_w(idx) {
+    inherit opcode("goto_w") encodedAs(0xc8)
+
+    def index = idx
+
+    method size { 5 }
+    method writeTo(file) {
+        file.writeU8(code)
+        file.writeI32(index)
+    }
+}
+class jsr_w(offs) {
+    inherit opcode("jsr_w") encodedAs(0xc9)
+
+    def offset = offs
+
+    method size { 5 }
+    method writeTo(file) {
+        file.writeU8(code)
+        file.writeI32(offs)
+    }
+}
 
 // Reserved
 def breakpoint      = opcode("breakpoint")      encodedAs(0xca)

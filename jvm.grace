@@ -57,20 +57,58 @@ class methodNamed(n) descriptor(desc) index(idx) inside(c) {
     def index = idx
     def cls is confidential = c
 
-    def nameConst = constUnicode(n).addToFile(c)
-    def descConst = constUnicode(desc).addToFile(c)
+    def nameConst = c.stringConst(n)
+    def descConst = c.stringConst(desc)
+    def codeConst = c.stringConst("Code")
 
-    var flags := 2
+    var flags := 1
 
-    var code := list []
+    def code is readable = object {
+        var insns := list []
 
-    method add(insn) { code.add(insn) }
+        method dataLength {
+            var codesize := 0
+            insns.do { i -> codesize := codesize + i.size }
 
-    class label {
-        def index is readable = code.size
+            var exceptionTableSize := 0
+            var attrsSize := 0
+
+            12 + codesize + exceptionTableSize + attrsSize
+        }
+
+        method writeTo(file) {
+            file.writeU16(512)
+            file.writeU16(512)
+
+            var codesize := 0
+            insns.do { i -> codesize := codesize + i.size }
+            file.writeU32(codesize)
+
+            insns.do { i -> i.writeTo(file) }
+
+            file.writeU16(0)
+            file.writeU16(0)
+        }
+
+        method add(insn) { insns.add(insn) }
+
+        class label {
+            def index is readable = insns.size
+        }
     }
 
-    method static {
+    var attrs := list []
+
+    method withCode(block) {
+        block.apply(code)
+    }
+
+    method setPrivate {
+        flags := flags + 1
+        self
+    }
+
+    method setStatic {
         flags := flags + 8
         self
     }
@@ -79,13 +117,21 @@ class methodNamed(n) descriptor(desc) index(idx) inside(c) {
         file.writeU16(flags)
         file.writeU16(nameConst.index)
         file.writeU16(descConst.index)
-        file.writeU16(0)
+        file.writeU16(attrs.size + 1)
+
+        writeCodeAttributeTo(file)
+    }
+
+    method writeCodeAttributeTo(file) {
+        file.writeU16(codeConst.index)
+        file.writeU32(code.dataLength)
+        code.writeTo(file)
     }
 }
 
 method methodNamed(n) args(narg) index(idx) inside(cls) {
     var args := ""
-    [1..narg].do { args := args ++ "L{objectBaseClass};" }
+    (1..narg).do { x -> args := args ++ "L{objectBaseClass};" }
     methodNamed(n) descriptor("({args})L{objectBaseClass};") index(idx)
         inside(cls)
 }
@@ -99,25 +145,25 @@ class classNamed(n) {
     var methods     := list []
     var attrs       := list []
 
-    def modString = constUnicode(moduleBaseClass).addToFile(self)
-    def objString = constUnicode(objectBaseClass).addToFile(self)
+    var cachedStrings := dictionary []
+
+    def modString = stringConst(moduleBaseClass)
+    def objString = stringConst(objectBaseClass)
     def modClass = constClassInfo(modString).addToFile(self)
     def objClass = constClassInfo(objString).addToFile(self)
 
-    def mainClassName = constUnicode(
-        "net/gracelang/minigrace/modules/Grace_{n}").addToFile(self)
+    def mainClassName = stringConst("net/gracelang/minigrace/modules/Grace_{n}")
     def mainClass = constClassInfo(mainClassName).addToFile(self)
 
     method methodNamed(nm) withArgs(nargs) {
-        def index = methods.size + 1
-        def m = methodNamed(n) args(nargs) index(index) inside(self)
+        def m = methodNamed(nm) args(nargs) index(methods.size + 1) inside(self)
         methods.add(m)
         m
     }
 
     method mainMethod {
-        def m = methodNamed("main") descriptor("([Ljava/lang/String)V")
-            index(methods.size + 1) inside(self).static
+        def m = methodNamed("main") descriptor("([Ljava/lang/String;)V")
+            index(methods.size + 1) inside(self).setStatic
         methods.add(m)
         m
     }
@@ -128,15 +174,28 @@ class classNamed(n) {
         const
     }
 
+    method stringConst(str) {
+        cachedStrings.at(str) ifAbsent {
+            def s = constUnicode(str).addToFile(self)
+            cachedStrings.at(str) put(s)
+            s
+        }
+    }
+
     method writeTo(file) {
         writeHeaderTo(file)
-        writeObjects(constants) toFile(file)
+        writeConstantPoolToFile(file)
         writeFlagsTo(file)
 
         writeObjects(interfaces) toFile(file)
         writeObjects(fields) toFile(file)
         writeObjects(methods) toFile(file)
         writeObjects(attrs) toFile(file)
+    }
+
+    method writeConstantPoolToFile(file) {
+        file.writeU16(constants.size + 1)
+        constants.do { o -> o.writeTo(file) }
     }
 
     method writeObjects(objs) toFile(file) {
