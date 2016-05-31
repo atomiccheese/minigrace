@@ -2,6 +2,9 @@
 import "util" as util
 import "identifierKinds" as k
 
+import "jvmops" as ops
+import "jvm" as jvm
+
 // This module contains classes and pseudo-classes for all the AST nodes used
 // in the parser. Because of the limitations of the class syntax, classes that
 // need more than one method are written as object literals containing methods.
@@ -992,6 +995,10 @@ def methodNode = object {
             s := s ++ "\n" ++ spc ++ "\}"
             s
         }
+        method emitMethodInto(cls) {
+            def mth = cls.graceMethodRef(nameString) withArgs(signature.size) inClass(cls)
+            body.do { x -> x.executeIn(mth) }
+        }
         method shallowCopy {
             methodNode.new(value, signature, body, dtype).shallowCopyFieldsFrom(self)
         }
@@ -1138,6 +1145,26 @@ def callNode = object {
             }
             s
         }
+
+        method executeIn(mth) {
+            def tgt = self.target
+
+            tgt.emitMethodTargetLoad(mth)
+            with.do { arg -> arg.emitValueLoad(mth) }
+
+            def methodName = tgt.nameString
+            def argCount = with.size
+
+            // TODO: Fix this to work with non-self objects using invokedynamic
+            def parentClass = jvm.objectBaseClass
+            def mtarget = mth.parentClass.graceMethodRef(methodName)
+                withArgs(argCount) inClass(parentClass)
+            print(mtarget)
+            print(mtarget.index)
+
+            mth.withCode { code -> code.add(ops.invokevirtual(mtarget)) }
+        }
+
         method asString { "call {what.pretty(0)}" }
         method shallowCopy {
             callNode.new(value, with).shallowCopyFieldsFrom(self)
@@ -1188,6 +1215,13 @@ def moduleNode = object {
                 }
             }
         }
+
+        method addGlobalCodeTo(cls) {
+            def mth = cls.outerMethod
+            self.executableComponentsDo { comp -> comp.executeIn(mth) }
+            mth.withCode { c -> c.add(ops.return_) }
+        }
+
         method shallowCopy {
             moduleNode.body(emptySeq).shallowCopyFieldsFrom(self)
         }
@@ -1355,6 +1389,19 @@ def objectNode is public = object {
             s := s ++ "\n" ++ spc ++ "\}"
             s
         }
+
+        method addInstanceVarsTo(cls) {
+        }
+
+        method addMethodsTo(cls) {
+        }
+
+        method addGlobalCodeTo(cls) {
+            def mth = cls.constructor
+            self.executableComponentsDo { comp -> comp.executeIn(mth) }
+            mth.withCode { c -> c.add(ops.return_) }
+        }
+
         method shallowCopy {
             objectNode.new(emptySeq, false).shallowCopyFieldsFrom(self)
         }
@@ -1497,6 +1544,29 @@ def memberNode = object {
             resultNode.linePos := linePos
             return resultNode
         }
+
+        method emitMethodTargetLoad(mth) {
+            mth.withCode { code -> code.add(ops.aload_0) }
+        }
+
+        method executeIn(mth) {
+            def tgt = self.target
+
+            tgt.emitMethodTargetLoad(mth)
+
+            def methodName = tgt.nameString
+
+            // TODO: Fix this to work with non-self objects using invokedynamic
+            def parentClass = jvm.objectBaseClass
+            def mtarget = mth.parentClass.graceMethodRef(methodName)
+                withArgs(0) inClass(parentClass)
+            print(mtarget)
+            print(mtarget.index)
+
+            mth.withCode { code -> code.add(ops.invokevirtual(mtarget)) }
+
+        }
+
         method shallowCopy {
             memberNode.new(value, nullNode).shallowCopyFieldsFrom(self)
         }
@@ -1705,6 +1775,9 @@ def identifierNode = object {
                 "identifier‹{value}›"
             }
         }
+        method emitMethodTargetLoad(mth) {
+            mth.withCode { code -> code.add(ops.aload_0) }
+        }
         method shallowCopy {
             identifierNode.new(value, false).shallowCopyFieldsFrom(self)
         }
@@ -1750,6 +1823,13 @@ def stringNode = object {
             def q = "\""
             q ++ value.quoted ++ q
         }
+        method emitValueLoad(mth) {
+            def cls = mth.parentClass
+            def str = cls.stringInfoConst(value)
+            mth.withCode { code ->
+                code.add(ops.ldc(str))
+            }
+        }
         method shallowCopy {
             stringNode.new(value).shallowCopyFieldsFrom(self)
         }
@@ -1774,6 +1854,13 @@ def numNode is public = object {
         }
         method toGrace(depth : Number) -> String {
             self.value.asString
+        }
+        method emitValueLoad(mth) {
+            def cls = mth.parentClass
+            def const = cls.floatConst(value.asNumber)
+            mth.withCode { code ->
+                code.add(ops.ldc(const))
+            }
         }
         method asString { "num {value}" }
         method shallowCopy {
@@ -2582,6 +2669,9 @@ def callWithPart = object {
                 s := "{s}\n    {spc}{a.pretty(depth + 4)}"
             }
             s
+        }
+        method emitValueLoad(mth) {
+            args.do { x -> x.emitValueLoad(mth) }
         }
         method shallowCopy {
             callWithPart.request(name) withArgs(args).shallowCopyFieldsFrom(self)

@@ -37,9 +37,39 @@ class bipush(n) {
 }
 
 def sipush          = opcode("sipush")          encodedAs(0x11)
-def ldc             = opcode("ldc")             encodedAs(0x12)
-def ldc_w           = opcode("ldc_w")           encodedAs(0x13)
-def ldc2_w          = opcode("ldc2_w")          encodedAs(0x14)
+class ldc(obj) { 
+    inherit opcode("ldc") encodedAs(0x12)
+    
+    def index = obj.index
+
+    method size { 2 }
+    method writeTo(file) {
+        file.writeU8(code)
+        file.writeU8(index)
+    }
+}
+class ldc_w(obj) {
+    inherit opcode("ldc_w") encodedAs(0x13)
+
+    def index = obj.index
+
+    method size { 3 }
+    method writeTo(file) {
+        file.writeU8(code)
+        file.writeU16(index)
+    }
+}
+class ldc2_w(obj) {
+    inherit opcode("ldc2_w") encodedAs(0x14)
+    
+    def index = obj.index
+
+    method size { 3 }
+    method writeTo(file) {
+        file.writeU8(code)
+        file.writeU16(index)
+    }
+}
 
 // Loads
 class iload(idx) {
@@ -379,10 +409,10 @@ class getfield(idx) {
 }
 
 def putfield        = opcode("putfield")        encodedAs(0xb5)
-class invokevirtual(idx) {
+class invokevirtual(mth) {
     inherit opcode("invokevirtual") encodedAs(0xb6)
 
-    def index = idx
+    def index = mth.index
 
     method size { 3 }
     method writeTo(file) {
@@ -390,12 +420,12 @@ class invokevirtual(idx) {
         file.writeU16(index)
     }
 }
-class invokespecial(idx) {
+class invokespecial(mth) {
     inherit opcode("invokespecial") encodedAs(0xb7)
 
-    def index = idx
+    def index = mth.index
 
-    method size { 2 }
+    method size { 3 }
     method writeTo(file) {
         file.writeU8(code)
         file.writeU16(index)
@@ -406,7 +436,7 @@ class invokestatic(idx) {
 
     def index = idx
 
-    method size { 2 }
+    method size { 3 }
     method writeTo(file) {
         file.writeU8(code)
         file.writeU16(index)
@@ -418,7 +448,7 @@ class invokeinterface(idx, count') {
     def index = idx
     def count = count'
 
-    method size { 4 }
+    method size { 5 }
     method writeTo(file) {
         file.writeU8(code)
         file.writeU16(index)
@@ -431,14 +461,24 @@ class invokedynamic(idx) {
 
     def index = idx
 
-    method size { 3 }
+    method size { 5 }
     method writeTo(file) {
         file.writeU8(code)
         file.writeU16(index)
         file.writeU16(0)
     }
 }
-def new             = opcode("new")             encodedAs(0xbb)
+class new(cls) {
+    inherit opcode("new") encodedAs(0xbb)
+
+    def index = cls.index
+
+    method size { 3 }
+    method writeTo(file) {
+        file.writeU8(code)
+        file.writeU16(index)
+    }
+}
 def newarray        = opcode("newarray")        encodedAs(0xbc)
 
 class anewarray(typeidx) {

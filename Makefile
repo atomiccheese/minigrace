@@ -14,7 +14,7 @@ EXTERNAL_STUBS := $(filter-out $(INTERNAL_STUBS) $(JS_STUBS), $(STUBS))
 CFILES = ast.c buildinfo.c genc.c genjs.c lexer.c parser.c util.c stringMap.c xmodule.c identifierresolution.c  errormessages.c
 
 # List of classes included in the JVM runtime library
-GRACELIB_JVM_CLASSES=GraceLibrary
+GRACELIB_JVM_CLASSES=GraceObjectBase GraceString GraceLibrary GraceObject GraceModule
 
 # The next 2 rules are here for their side effects: updating
 # buildinfo.grace if necessary, and creating the l1 directory
@@ -192,7 +192,9 @@ gracelib.o: gracelib-basic.o debugger.o StandardPrelude.gcn collectionsPrelude.g
 	ld -o gracelib.o -r gracelib-basic.o StandardPrelude.gcn collectionsPrelude.gcn debugger.o
 
 gracelib.jar: $(GRACELIB_JVM_CLASSES:%=gracelib-jvm/%.class)
-	jar cf $@ $^
+	mkdir -p gracelib-jvm/net/gracelang/minigrace/runtime
+	cp gracelib-jvm/*.class gracelib-jvm/net/gracelang/minigrace/runtime/
+	jar cf $@ gracelib-jvm/net
 
 install: minigrace $(COMPILER_MODULES:%.grace=js/%.js) $(COMPILER_MODULES:%.grace=%.gct) $(STUB_GCTS) $(STUBS:%.grace=js/%.gct) js/grace $(LIBRARY_MODULES:%.grace=modules/%.gct)  $(LIBRARY_MODULES:%.grace=js/%.js) $(LIBRARY_WO_OBJECTDRAW:%.grace=modules/%.gcn) $(LIBRARY_WO_OBJECTDRAW:%.grace=modules/%.gso) gracelib.o
 	install -d $(PREFIX)/bin $(MODULE_PATH) $(OBJECT_PATH) $(INCLUDE_PATH)
@@ -519,7 +521,8 @@ uninstall:
 	gcc -g -std=c99 -c -o $@ $<
 
 %.class: %.java
-	javac $?
+	javac -cp gracelib-jvm $?
+	cp $@ gracelib-jvm/net/gracelang/minigrace/runtime/
 
 ## GENERATED WITH: for i in stringMap errormessages buildinfo util ast; do ./tools/make-depend $i; done | sort -u | grep -v :$ | sed 's/gct/gso/g'
 # manually removed io.gso and sys.gso, which are built in!
